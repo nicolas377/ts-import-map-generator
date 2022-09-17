@@ -1,0 +1,57 @@
+{
+  "name": "ts-import-map-generator",
+  "version": "0.0.0",
+  "description": "Creates import maps based from a typescript entry point file.",
+  "bin": "cli.js",
+  "types": "dist/api.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/api.prod.js",
+      "require": "./dist/api.prod.cjs"
+    }
+  },
+  "files": [
+    "dist/*.d.ts",
+    "dist/*.prod.js",
+    "dist/*.prod.mjs"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "check-format": "prettier --ignore-path=.gitignore --check .",
+    "lint": "eslint --ignore-path=.gitignore .",
+    "prepare": "husky install",
+    "prettier": "prettier --ignore-path=.gitignore --write .",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicolas377/ts-import-map-generator.git"
+  },
+  "author": "Nicolas Rodriguez",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nicolas377/ts-import-map-generator/issues"
+  },
+  "homepage": "https://github.com/nicolas377/ts-import-map-generator#readme",
+  "dependencies": {
+    "typescript": "~4.8.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-json": "~4.1.0",
+    "@rollup/plugin-replace": "~4.0.0",
+    "@rollup/plugin-typescript": "~8.5.0",
+    "@types/lodash.merge": "~4.6.7",
+    "@typescript-eslint/eslint-plugin": "~5.37.0",
+    "eslint": "~8.23.1",
+    "eslint-config-prettier": "~8.5.0",
+    "eslint-import-resolver-typescript": "~3.5.1",
+    "eslint-plugin-import": "~2.26.0",
+    "husky": "~8.0.1",
+    "jest": "~29.0.3",
+    "lodash.merge": "~4.6.2",
+    "prettier": "~2.7.1",
+    "rollup": "~2.79.0",
+    "rollup-plugin-dts": "~4.2.2",
+    "ts-jest": "~29.0.1"
+  }
+}
