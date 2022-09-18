@@ -1,3 +1,3 @@
-import { runCli } from ".";
-
-runCli();
+export function runCli(): void {
+  console.log("Hello World");
+}

@@ -44,7 +44,10 @@ function createPlugins(dev) {
  */
 function createConfig(overrides, { apiOrCli, dev, format }) {
   return merge(overrides, {
-    input: apiOrCli === "api" ? "./src/index.ts" : "./src/cli.ts",
+    input:
+      apiOrCli === "api"
+        ? "./src/entrypoints/api.ts"
+        : "./src/entrypoints/cli.ts",
     treeshake: dev ? undefined : "recommended",
     output: {
       sourcemap: true,
@@ -66,7 +69,7 @@ const config = [
   createConfig({}, { apiOrCli: "api", dev: true, format: "cjs" }),
   createConfig({}, { apiOrCli: "api", dev: false, format: "cjs" }),
   {
-    input: "./src/index.ts",
+    input: "./src/entrypoints/api.ts",
     output: {
       file: "./dist/api.d.ts",
       format: "esm",
