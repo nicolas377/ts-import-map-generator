@@ -4,11 +4,10 @@ import {
   scanArgs,
   ScannerNodeKind,
 } from "./scanner";
-import { Debug } from "utils";
 
 const enum NodeKind {
   SyntaxTree,
-  Whitespace,
+  Separator,
   Argument,
   Flag,
   Value,
@@ -19,13 +18,13 @@ const enum NodeKind {
 
 const enum NodeFlags {
   None = 0,
-  HasMoreThanTwoDashes = 1 << 0,
-  HasMoreThanOneEquals = 1 << 1,
+  HasMoreThanTwoDashes = 1 << 1,
+  HasMoreThanOneEquals = 1 << 2,
 }
 
-type NodeId = number;
+type NodeId = number & { unique: symbol };
 
-type ExcludeParentFromNode<T extends Node> = Omit<T, "parent">;
+type ExcludeParent<T extends Node> = Omit<T, "parent">;
 
 interface ParentLessNode {
   readonly kind: NodeKind;
@@ -43,7 +42,7 @@ interface UnknownTextNode extends Node {
 }
 
 interface SeparatorNode extends Node {
-  readonly kind: NodeKind.EqualsSign;
+  readonly kind: NodeKind.Separator;
 }
 
 interface ValueNode extends Node {
@@ -63,10 +62,6 @@ interface DashNode extends Node {
   readonly doubleDash: boolean;
 }
 
-interface WhitespaceNode extends Node {
-  readonly kind: NodeKind.Whitespace;
-}
-
 interface ArgumentNode extends Node {
   readonly kind: NodeKind.Argument;
 
@@ -78,7 +73,7 @@ interface ArgumentNode extends Node {
 
 interface SyntaxTree extends ParentLessNode {
   readonly kind: NodeKind.SyntaxTree;
-  readonly arguments: readonly ArgumentNode[];
+  readonly arguments: ArgumentNode[];
 }
 
 interface SyntaxTreeApi {
@@ -99,6 +94,7 @@ export function parseSyntaxTreeFromArgsString(
   // - If the current dash node has one dash, a equals sign node and a value node should be ignored.
   //   This is because short flags cannot have values attached to them.
 
+  // TODO: consider using a WeakMap, since garbage collection should be applied to nodes not bound to the syntax tree.
   const idNodeMap = new Map<NodeId, Node>();
   const syntaxTree: SyntaxTree = {
     ...createParentLessNode(NodeKind.SyntaxTree),
@@ -115,34 +111,27 @@ export function parseSyntaxTreeFromArgsString(
   let doubleDashFlag: boolean = flagDefaults.doubleDash;
   let moreThanTwoDashesFlag: boolean = flagDefaults.moreThanTwoDashes;
 
-  let currentDashNode: ExcludeParentFromNode<DashNode> | undefined;
-  let currentFlagNode: ExcludeParentFromNode<FlagNode> | undefined;
-  let currentSeparatorNode: ExcludeParentFromNode<SeparatorNode> | undefined;
-  let currentValueNode: ExcludeParentFromNode<ValueNode> | undefined;
+  let currentDashNode: ExcludeParent<DashNode> | undefined;
+  let currentFlagNode: ExcludeParent<FlagNode> | undefined;
+  let currentSeparatorNode: ExcludeParent<SeparatorNode> | undefined;
+  let currentValueNode: ExcludeParent<ValueNode> | undefined;
 
   loopThroughScannedNodes((node, { peekNextNode }) => {
-    if (node.kind === ScannerNodeKind.Whitespace) {
-      if (doubleDashFlag) {
-        // We're in the middle of parsing a long flag argument.
-      }
-      // We don't care about whitespace when not parsing a long flag argument.
-      else return;
-    } else {
-      if (node.dashFlag) {
-        if (node.text.length === 1) {
-          singleDashFlag = true;
-        } else {
-          if (node.text.length >= 2) {
-            doubleDashFlag = true;
-          }
-          if (node.text.length > 2) {
-            moreThanTwoDashesFlag = true;
-          }
-        }
-
-        currentDashNode = createParentLessDashNode(node);
-      }
-    }
+    // TODO: pick up here
+    // - If we encounter whitespace or an equals sign, we check if we're creating a long flag argument and the flag is already set.
+    //   If we are, we should create and bind a separator node.
+    //   Otherwise, ignore the separator and log a warning.
+    // - If we encounter dashes, check if we are already creating an argument.
+    //   If we are, ignore the dashes and log a warning.
+    //   If we aren't, create and bind a dash node.
+    // - If we encounter an unflagged text node, create a UnknownTextNode.
+    //   Narrow it to a FlagNode or a ValueNode (offloaded to another function), then bind it to whichever needs it.
+    // - Check if everything that's needed for a argument node has been created.
+    //   If it has, then create the argument node, bind it to the syntax tree, and clean up for the next node.
+    //   Otherwise, just keep going.
+    // - If there's no more left scanned nodes left, and we can't naturally make an argument node, then check if we can forcefully create one.
+    //   We need a dash node and a flag node to forcefully create a argument node.
+    //   If we can, do so, bind it to the syntax tree, and exit.
   });
 
   return createApi(syntaxTree);
@@ -179,24 +168,11 @@ export function parseSyntaxTreeFromArgsString(
     moreThanTwoDashesFlag = flagDefaults.moreThanTwoDashes;
   }
 
-  function createParentLessDashNode(
-    node: ParserTextNode
-  ): ExcludeParentFromNode<DashNode> {
-    return {
-      ...createParentLessNode(NodeKind.Dash),
-      flags: moreThanTwoDashesFlag
-        ? NodeFlags.HasMoreThanTwoDashes
-        : NodeFlags.None,
-      singleDash: singleDashFlag,
-      doubleDash: doubleDashFlag,
-    };
-  }
-
-  function createParentLessArgumentNode(
-    dash: ExcludeParentFromNode<DashNode>,
-    flag: ExcludeParentFromNode<FlagNode>,
-    separator?: ExcludeParentFromNode<SeparatorNode>,
-    value?: ExcludeParentFromNode<ValueNode>
+  function createArgumentNode(
+    dash: ExcludeParent<DashNode>,
+    flag: ExcludeParent<FlagNode>,
+    separator?: ExcludeParent<SeparatorNode>,
+    value?: ExcludeParent<ValueNode>
   ): ArgumentNode {
     const argumentNode: ArgumentNode = {
       ...createParentLessNode(NodeKind.Argument),
@@ -208,19 +184,52 @@ export function parseSyntaxTreeFromArgsString(
     (dash as DashNode).parent = argumentNode;
     (flag as FlagNode).parent = argumentNode;
 
-    if (value) {
-      if (separator) {
-        argumentNode.separator = { ...separator, parent: argumentNode };
-      }
+    if (value && separator) {
+      argumentNode.separator = { ...separator, parent: argumentNode };
       argumentNode.value = { ...value, parent: argumentNode };
     }
 
     return argumentNode;
   }
 
-  function createParentLessNode<T extends NodeKind>(
-    kind: T
-  ): ParentLessNode & { kind: T } {
+  function createParentLessDashNode(): ExcludeParent<DashNode> {
+    return {
+      ...createParentLessNode(NodeKind.Dash),
+      flags: moreThanTwoDashesFlag
+        ? NodeFlags.HasMoreThanTwoDashes
+        : NodeFlags.None,
+      singleDash: singleDashFlag,
+      doubleDash: doubleDashFlag,
+    };
+  }
+
+  function createParentLessSeparatorNode(): ExcludeParent<SeparatorNode> {
+    return createParentLessNode(NodeKind.Separator);
+  }
+
+  function createParentLessUnknownTextNode(
+    node: ParserTextNode
+  ): ExcludeParent<UnknownTextNode> {
+    return createTextNode(NodeKind.UnknownText, node);
+  }
+
+  function createParentLessValueNode(
+    node: ParserTextNode
+  ): ExcludeParent<ValueNode> {
+    return createTextNode(NodeKind.Value, node);
+  }
+
+  function createParentLessFlagNode(
+    node: ParserTextNode
+  ): ExcludeParent<FlagNode> {
+    return createTextNode(NodeKind.Flag, node);
+  }
+
+  function createTextNode<T extends NodeKind>(kind: T, node: ParserTextNode) {
+    return { ...createParentLessNode(kind), text: node.text };
+  }
+
+  function createParentLessNode<T extends NodeKind>(kind: T) {
     return {
       kind,
       flags: NodeFlags.None,
@@ -238,7 +247,7 @@ export function parseSyntaxTreeFromArgsString(
   }
 
   function createNodeId(): NodeId {
-    let i = 0;
+    let i = 0 as NodeId;
 
     while (idNodeMap.has(i)) {
       i++;

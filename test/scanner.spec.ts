@@ -1,6 +1,6 @@
+import { removeDateFromLog } from "./helpers";
 import { scanArgs } from "optionsInitializer/scanner";
 import { Debug } from "utils";
-import { removeDateFromLog } from "./helpers";
 
 describe.each([
   "--name=value --name value --bool-name= --bool-name -b --name=",
