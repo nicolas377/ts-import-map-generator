@@ -1,7 +1,7 @@
 import { defaults } from "jest-config";
-import type { InitialOptionsTsJest } from "ts-jest";
+import type { JestConfigWithTsJest } from "ts-jest";
 
-const config: InitialOptionsTsJest = {
+const config: JestConfigWithTsJest = {
   // TODO
   passWithNoTests: true,
 
@@ -12,13 +12,13 @@ const config: InitialOptionsTsJest = {
       "ts-jest",
       {
         tsconfig: "./tsconfig.spec.json",
-        isolatedModules: true,
       },
     ],
   },
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
+  setupFilesAfterEnv: ["jest-extended/all"],
   testEnvironment: "node",
   clearMocks: true,
   resetMocks: true,

@@ -4,6 +4,7 @@ import replace from "@rollup/plugin-replace";
 import typescript from "@rollup/plugin-typescript";
 import merge from "lodash.merge";
 import dts from "rollup-plugin-dts";
+import externals from "rollup-plugin-node-externals";
 
 /** @param {boolean} dev */
 function createPlugins(dev) {
@@ -17,9 +18,10 @@ function createPlugins(dev) {
         }),
         typescript({
           tsconfig: "./tsconfig.rollup.json",
-          compilerOptions: { removeComments: true },
+          compilerOptions: { removeComments: false },
         }),
         json({ preferConst: true }),
+        externals(),
       ]
     : [
         replace({
@@ -30,8 +32,10 @@ function createPlugins(dev) {
         }),
         typescript({
           tsconfig: "./tsconfig.rollup.json",
+          compilerOptions: { removeComments: true },
         }),
         json({ preferConst: true }),
+        externals(),
       ];
 }
 

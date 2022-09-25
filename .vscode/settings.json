@@ -1,3 +1,4 @@
 {
-  "conventionalCommits.scopes": ["repo", "gh"]
+  "conventionalCommits.scopes": ["repo", "gh"],
+  "jest.autoRun": "off"
 }

@@ -1,0 +1,316 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`scanner "--name=value --name value --bool-name= --bool-name -b --name=" Log snapshot 1`] = `[]`;
+
+exports[`scanner "--name=value --name value --bool-name= --bool-name -b --name=" Syntax tree snapshot 1`] = `
+[
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "--",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "name",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": true,
+    "kind": 1,
+    "text": "=",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "value",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "--",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "name",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "value",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "--",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "bool-name",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": true,
+    "kind": 1,
+    "text": "=",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "--",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "bool-name",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "b",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "--",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "name",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": true,
+    "kind": 1,
+    "text": "=",
+  },
+]
+`;
+
+exports[`scanner "-a -b -c -d -e -f -g -h -i -j" Log snapshot 1`] = `[]`;
+
+exports[`scanner "-a -b -c -d -e -f -g -h -i -j" Syntax tree snapshot 1`] = `
+[
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "a",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "b",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "c",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "d",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "e",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "f",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "g",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "h",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "i",
+  },
+  {
+    "kind": 0,
+    "text": " ",
+  },
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "j",
+  },
+]
+`;
+
+exports[`scanner "-abc" Log snapshot 1`] = `[]`;
+
+exports[`scanner "-abc" Syntax tree snapshot 1`] = `
+[
+  {
+    "dashFlag": true,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "-",
+  },
+  {
+    "dashFlag": false,
+    "equalsFlag": false,
+    "kind": 1,
+    "text": "abc",
+  },
+]
+`;

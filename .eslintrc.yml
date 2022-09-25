@@ -43,6 +43,15 @@ overrides:
     rules:
       "@typescript-eslint/no-var-requires":
         - "off"
+  - files:
+      - "test/**/*.spec.ts"
+    plugins:
+      - jest
+      - jest-extended
+    extends:
+      - plugin:jest/recommended
+      - plugin:jest/style
+      - plugin:jest-extended/recommended
 settings:
   import/parsers:
     "@typescript-eslint/parser":

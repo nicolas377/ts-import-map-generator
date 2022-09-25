@@ -3,5 +3,6 @@
   "compilerOptions": {
     "module": "commonjs"
   },
-  "includes": ["test/**/*.ts"]
+  "includes": ["test/**/*.ts"],
+  "files": ["test/global.d.ts"]
 }

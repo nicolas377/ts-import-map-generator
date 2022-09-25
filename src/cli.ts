@@ -1,3 +1,7 @@
+import { initializeOptionsFromCliArgs } from "optionsInitializer";
+
 export function runCli(): void {
-  console.log("Hello World");
+  console.time("arg initialization");
+  initializeOptionsFromCliArgs();
+  console.timeEnd("arg initialization");
 }
