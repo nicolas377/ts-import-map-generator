@@ -55,6 +55,8 @@ export function* scanArgs(
   // - The equals character (=) is a flag that indicates the next text node should be treated as a value.
   //   Multiple equals characters are supported, and mean the same as one equal character.
 
+  // TODO: support quotes around values
+
   const argsChars: readonly string[] = [...args];
   const flagDefaults = {
     dashFlag: false,
