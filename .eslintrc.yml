@@ -14,10 +14,13 @@ parserOptions:
 plugins:
   - "@typescript-eslint"
   - import
+reportUnusedDisableDirectives: true
 rules:
   "@typescript-eslint/ban-ts-comment":
     - warn
   "@typescript-eslint/no-non-null-assertion":
+    - off
+  "@typescript-eslint/ban-types":
     - off
   import/order:
     - error

@@ -47,5 +47,3 @@ function createArgument<T extends ArgumentType>(
 }
 
 const enum ArgumentKind {}
-
-export const allArguments = [];

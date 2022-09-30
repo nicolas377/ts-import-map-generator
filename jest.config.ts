@@ -2,9 +2,6 @@ import { defaults } from "jest-config";
 import type { JestConfigWithTsJest } from "ts-jest";
 
 const config: JestConfigWithTsJest = {
-  // TODO
-  passWithNoTests: true,
-
   preset: "ts-jest/presets/default-esm",
   testMatch: ["**/test/**/*.spec.ts"],
   transform: {

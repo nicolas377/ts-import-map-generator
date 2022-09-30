@@ -24,9 +24,10 @@ export function arrayIncludesValue<T>(
   return arr.includes(value as T);
 }
 
-export function getElementInArray<T>(array: T[], index: number): T | undefined {
-  if (index < 0 || index >= array.length) {
-    return undefined;
-  }
-  return array[index];
-}
+// production build detection
+
+export const productionBuild =
+  process.env.IMG_PROJECT_ENV === "production" ||
+  typeof (process as unknown as Record<PropertyKey, unknown>)[
+    Symbol.for("ts-node.register.instance")
+  ] !== "undefined";

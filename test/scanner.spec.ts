@@ -1,5 +1,5 @@
 import { removeDateFromLog } from "./helpers";
-import { scanArgs } from "optionsInitializer/scanner";
+import { scanArgs } from "options/scanner";
 import { Debug } from "utils";
 
 describe.each([
@@ -14,7 +14,7 @@ describe.each([
   });
 
   test("Log snapshot", () => {
-    // just running the generator all the way through
+    // just running the generator all the way through to get logs
     [...scanArgs(argString)];
 
     expect(Debug.logs.map(removeDateFromLog)).toMatchSnapshot();

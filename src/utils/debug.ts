@@ -1,3 +1,5 @@
+import { productionBuild } from "utils";
+
 type JSONable =
   | string
   | number
@@ -40,9 +42,6 @@ const debugLevelNames: Record<DebugLevel, string> = {
   [DebugLevel.Debug]: "DEBUG",
   [DebugLevel.Trace]: "TRACE",
 };
-
-// added by rollup during build
-declare const productionBuild: boolean;
 
 class DebugClass implements IDebug {
   public logs: Log[] = [];

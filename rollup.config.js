@@ -13,7 +13,7 @@ function createPlugins(dev) {
         replace({
           preventAssignment: true,
           values: {
-            productionBuild: JSON.stringify(!dev),
+            "process.env.IMG_PROJECT_ENV": JSON.stringify("development"),
           },
         }),
         typescript({
@@ -27,7 +27,7 @@ function createPlugins(dev) {
         replace({
           preventAssignment: true,
           values: {
-            productionBuild: JSON.stringify(!dev),
+            "process.env.IMG_PROJECT_ENV": JSON.stringify("production"),
           },
         }),
         typescript({

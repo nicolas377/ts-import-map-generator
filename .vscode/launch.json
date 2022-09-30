@@ -6,6 +6,17 @@
       "request": "attach",
       "name": "Attach via Port",
       "processId": "${command:PickProcess}"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug CLI with ts-node",
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "args": [
+        "${workspaceFolder}/src/entrypoints/cli.ts",
+        "-abcdefghijk --some-val=value --name=value --name value --bool-name -b"
+      ],
+      "console": "integratedTerminal"
     }
   ]
 }

@@ -1,8 +1,8 @@
 import {
-  TextNodeWithFlags as ParserTextNode,
-  WhitespaceNode as ParserWhitespaceNode,
   scanArgs,
   ScannerNodeKind,
+  TextNodeWithFlags as ScannerTextNode,
+  WhitespaceNode as ScannerWhitespaceNode,
 } from "./scanner";
 import { Debug } from "utils";
 
@@ -19,8 +19,10 @@ const enum NodeKind {
 
 const enum NodeFlags {
   None = 0,
-  HasMoreThanTwoDashes = 1 << 1,
-  HasMoreThanOneEquals = 1 << 2,
+  HasMoreThanTwoDashes = 1 << 0, // This dash node was created from a scanned node of more than two dashes.
+  NarrowedFromUnflaggedText = 1 << 1, // This value or flag node was narrowed from an UnknownTextNode by narrowUnknownTextNode().
+  IsTopLevelSyntaxTree = 1 << 2, // This node is the full syntax tree.
+  ForceCreated = 1 << 3, // This argument node was forcefully created, because we ran into the end of text while in the middle of creating a argument.
 }
 
 type NodeId = number & { unique: symbol };
@@ -34,7 +36,7 @@ interface ParentLessNode {
 }
 
 interface Node extends ParentLessNode {
-  parent: ParentLessNode;
+  readonly parent: ParentLessNode;
 }
 
 interface UnknownTextNode extends Node {
@@ -96,17 +98,17 @@ export function parseSyntaxTreeFromArgsString(
   // - If the current dash node has one dash, a equals sign node and a value node should be ignored.
   //   This is because short flags cannot have values attached to them.
 
-  // TODO: find some way to prune nodes that don't make it into the final syntax tree.
   const idNodeMap = new Map<NodeId, ParentLessNode>();
   const syntaxTree: SyntaxTree = Object.assign(
     createParentLessNode(NodeKind.SyntaxTree),
     { arguments: [] }
   );
+  applyFlagsToNode(syntaxTree, NodeFlags.IsTopLevelSyntaxTree);
   const scannedArgs = [...scanArgs(argsString)];
 
   let currentScannedArgIndex = -1;
   let currentScannedArg = scannedArgs[currentScannedArgIndex];
-  let isOutOfScannedArgs = false;
+  let isOutOfScannedArgs = false as boolean;
 
   const flagDefaults = {
     singleDash: false,
@@ -125,17 +127,13 @@ export function parseSyntaxTreeFromArgsString(
 
   while (currentScannedArgIndex < scannedArgs.length) {
     if (currentScannedArg === undefined) {
-      if (isOutOfScannedArgs) {
-        // We're out of arguments, so we're done. This branch shouldn't ever be run (it should be covered later), but it's here for safety.
-        break;
-      }
       // This is the first iteration. We should just set up the first scanned arg and continue.
       setupNextScannedArg();
       continue;
     }
 
     // If we encounter whitespace or an equals sign, check if we're creating a long flag argument and the flag is already set.
-    if (parserNodeIsSeparator(currentScannedArg)) {
+    if (scannerNodeIsSeparator(currentScannedArg)) {
       // We won't do anything else with a separator node, so we can just discard it if we don't do anything now.
       if (currentFlagNode) {
         if (isCurrentlyCreatingArgument() && doubleDashFlag) {
@@ -167,17 +165,19 @@ export function parseSyntaxTreeFromArgsString(
     else if (singleDashFlag) {
       for (const char of currentScannedArg.text) {
         currentDashNode = createParentLessDashNode();
-        currentFlagNode = createParentLessFlagNode({ text: char });
+        currentFlagNode = createParentLessFlagNode(char);
         createAndBindArgumentNode();
       }
 
+      resetForNewArgument();
       continue;
     }
 
     // If we encounter an unflagged text node, create a UnknownTextNode.
     else {
-      const unknownTextNode =
-        createParentLessUnknownTextNode(currentScannedArg);
+      const unknownTextNode = createParentLessUnknownTextNode(
+        currentScannedArg.text
+      );
 
       // Narrow it to a FlagNode or a ValueNode (offloaded to another function), then bind it.
       const narrowedTextNodeOrFalse = narrowUnknownTextNode(unknownTextNode);
@@ -198,22 +198,18 @@ export function parseSyntaxTreeFromArgsString(
     // If it has, then create the argument node, bind it to the syntax tree, and clean up for the next node.
     if (canNaturallyCreateArgumentNode()) {
       createAndBindArgumentNode();
-
-      // If we're out of scanned args, we should exit the loop.
-      // TODO: why is this narrowed to false?
-      if (isOutOfScannedArgs) {
-        break;
-      }
+      resetForNewArgument();
     }
 
     // If there's no more left scanned nodes left, and we can't naturally make an argument node, then check if we can forcefully create one.
     // We need a dash node and a flag node to forcefully create a argument node.
-    else if (isOutOfScannedArgs) {
-      if (currentDashNode && currentFlagNode) {
-        Debug.warn("Unexpected end of arguments.");
-        createAndBindArgumentNode();
-      }
+    else if (isOutOfScannedArgs && currentDashNode && currentFlagNode) {
       // If we can, do so, bind it to the syntax tree, and exit the loop.
+      Debug.warn("Unexpected end of arguments.");
+      createAndBindArgumentNode();
+    }
+
+    if (isOutOfScannedArgs) {
       break;
     }
 
@@ -221,90 +217,7 @@ export function parseSyntaxTreeFromArgsString(
     setupNextScannedArg();
   }
 
-  return finalizeSyntaxTree(syntaxTree, idNodeMap);
-
-  function createAndBindArgumentNode(): NodeId {
-    const argumentNode = createArgumentNode(
-      currentDashNode!,
-      currentFlagNode!,
-      currentSeparatorNode,
-      currentValueNode
-    );
-    syntaxTree.arguments.push(argumentNode);
-    resetForNewArgument();
-
-    return argumentNode.id;
-  }
-
-  function canNaturallyCreateArgumentNode(): boolean {
-    let canCreateArgument = false;
-
-    // We need a dash node and a flag node no matter what.
-    if (currentDashNode && currentFlagNode) {
-      // If the dash node has two dashes, we can have a separator and value node, so check ahead to see if those are present.
-      if (doubleDashFlag) {
-        const forward2Args = peekForwardNArgs(2);
-
-        // If two arguments forward is the start of a new argument, this argument ends now.
-        // Note that we don't support "--flag= --nextFlag", so we don't need to check for that.
-        if (
-          forward2Args &&
-          forward2Args.kind === ScannerNodeKind.Text &&
-          forward2Args.dashFlag
-        ) {
-          canCreateArgument = true;
-        }
-      }
-
-      // If the dash node has one dash, we can't have a separator or value node, so we can create an argument node.
-      else if (singleDashFlag) {
-        canCreateArgument = true;
-      }
-    }
-
-    return canCreateArgument;
-  }
-
-  function parserNodeIsSeparator(
-    node: ParserTextNode | ParserWhitespaceNode
-  ): node is ParserWhitespaceNode | (ParserTextNode & { equalsFlag: true }) {
-    return node.kind === ScannerNodeKind.Whitespace || node.equalsFlag;
-  }
-
-  function isCurrentlyCreatingArgument(): boolean {
-    return currentDashNode !== undefined;
-  }
-
-  function peekForwardNArgs(
-    n: number
-  ): ParserTextNode | ParserWhitespaceNode | undefined {
-    return scannedArgs[currentScannedArgIndex + n];
-  }
-
-  function setupNextScannedArg(): void {
-    if (isOutOfScannedArgs) return;
-
-    const nextScannedArgIndex = currentScannedArgIndex + 1;
-
-    // If the next scanned arg index is out of bounds, then we are out of scanned args after this one.
-    if (nextScannedArgIndex >= scannedArgs.length - 1) {
-      isOutOfScannedArgs = true;
-    }
-
-    currentScannedArgIndex = nextScannedArgIndex;
-    currentScannedArg = scannedArgs[currentScannedArgIndex];
-  }
-
-  function resetForNewArgument(): void {
-    currentDashNode = undefined;
-    currentFlagNode = undefined;
-    currentSeparatorNode = undefined;
-    currentValueNode = undefined;
-
-    singleDashFlag = flagDefaults.singleDash;
-    doubleDashFlag = flagDefaults.doubleDash;
-    moreThanTwoDashesFlag = flagDefaults.moreThanTwoDashes;
-  }
+  return finalizeSyntaxTreeAndCreateApi(syntaxTree, idNodeMap);
 
   // Attempts to narrow the unknown text node to a flag node or a value node depending on the context.
   function narrowUnknownTextNode(
@@ -322,20 +235,17 @@ export function parseSyntaxTreeFromArgsString(
     // Narrowing based on context.
 
     // If the next token is a equals sign, then we should narrow the unknown text node to a flag node.
-    if (
-      oneNodeForward &&
-      oneNodeForward.kind === ScannerNodeKind.Text &&
-      oneNodeForward.equalsFlag
-    ) {
+    if (scannerNodeIsText(oneNodeForward) && oneNodeForward.equalsFlag) {
       return createFlagNode();
     }
     // If two tokens forward is a dash node, or the previous node is a separator node, then we should narrow the unknown text node to a value node.
     const oneNodeBack = peekForwardNArgs(-1);
     if (
-      (twoNodesForward &&
-        twoNodesForward.kind === ScannerNodeKind.Text &&
-        twoNodesForward.dashFlag) ||
-      (oneNodeBack && parserNodeIsSeparator(oneNodeBack))
+      (scannerNodeIsText(twoNodesForward) &&
+        twoNodesForward.dashFlag &&
+        // We can't narrow to a value node if the previous node is the start of a new argument (dashes).
+        !(scannerNodeIsText(oneNodeBack) && oneNodeBack.dashFlag)) ||
+      scannerNodeIsSeparator(oneNodeBack)
     ) {
       return createValueNode();
     }
@@ -351,12 +261,59 @@ export function parseSyntaxTreeFromArgsString(
     return false;
 
     function createFlagNode(): ExcludeParent<FlagNode> {
-      return createParentLessFlagNode(unknownTextNode);
+      const node = createParentLessFlagNode(unknownTextNode.text);
+      applyFlagsToNode(node, NodeFlags.NarrowedFromUnflaggedText);
+
+      return node;
     }
 
     function createValueNode(): ExcludeParent<ValueNode> {
-      return createParentLessValueNode(unknownTextNode);
+      const node = createParentLessValueNode(unknownTextNode.text);
+      applyFlagsToNode(node, NodeFlags.NarrowedFromUnflaggedText);
+
+      return node;
     }
+  }
+
+  function canNaturallyCreateArgumentNode(): boolean {
+    let canCreateArgument = false;
+
+    // We need a dash node and a flag node no matter what.
+    if (currentDashNode && currentFlagNode) {
+      // If the dash node has two dashes, we can have a separator and value node, so check ahead to see if those are present.
+      if (doubleDashFlag) {
+        const forward2Args = peekForwardNArgs(2);
+
+        // If two arguments forward is the start of a new argument, this argument ends now.
+        // Note that we don't support "--flag= --nextFlag", so we don't need to check for that.
+        if (scannerNodeIsText(forward2Args) && forward2Args.dashFlag) {
+          canCreateArgument = true;
+        }
+      }
+
+      // If the dash node has one dash, we can't have a separator or value node, so we can create an argument node.
+      else if (singleDashFlag) {
+        canCreateArgument = true;
+      }
+    }
+
+    return canCreateArgument;
+  }
+
+  function isCurrentlyCreatingArgument(): boolean {
+    return currentDashNode !== undefined;
+  }
+
+  function createAndBindArgumentNode(): NodeId {
+    const argumentNode = createArgumentNode(
+      currentDashNode!,
+      currentFlagNode!,
+      currentSeparatorNode,
+      currentValueNode
+    );
+    syntaxTree.arguments.push(argumentNode);
+
+    return argumentNode.id;
   }
 
   function createArgumentNode(
@@ -401,27 +358,17 @@ export function parseSyntaxTreeFromArgsString(
     return createParentLessNode(NodeKind.Separator);
   }
 
-  function createParentLessUnknownTextNode({
-    text,
-  }: {
-    text: string;
-  }): ExcludeParent<UnknownTextNode> {
+  function createParentLessUnknownTextNode(
+    text: string
+  ): ExcludeParent<UnknownTextNode> {
     return createTextNode(NodeKind.UnknownText, text);
   }
 
-  function createParentLessValueNode({
-    text,
-  }: {
-    text: string;
-  }): ExcludeParent<ValueNode> {
+  function createParentLessValueNode(text: string): ExcludeParent<ValueNode> {
     return createTextNode(NodeKind.Value, text);
   }
 
-  function createParentLessFlagNode({
-    text,
-  }: {
-    text: string;
-  }): ExcludeParent<FlagNode> {
+  function createParentLessFlagNode(text: string): ExcludeParent<FlagNode> {
     return createTextNode(NodeKind.Flag, text);
   }
 
@@ -450,61 +397,114 @@ export function parseSyntaxTreeFromArgsString(
 
     return i;
   }
-}
 
-function finalizeSyntaxTree(
-  syntaxTree: SyntaxTree,
-  idNodeMap: Map<NodeId, ParentLessNode>
-): SyntaxTreeApi {
-  pruneIdNodeMap();
+  // helper functions here
 
-  return {
-    syntaxTree,
-    findNodeById(id: NodeId): ParentLessNode | undefined {
-      return idNodeMap.get(id);
-    },
-    forEachNode: forEachNodeInSyntaxTree,
-  };
+  function setupNextScannedArg(): void {
+    if (isOutOfScannedArgs) return;
 
-  function pruneIdNodeMap(): void {
-    const idsInSyntaxTree = new Set<NodeId>();
+    const nextScannedArgIndex = currentScannedArgIndex + 1;
 
-    forEachNodeInSyntaxTree((node) => {
-      idsInSyntaxTree.add(node.id);
-    });
-
-    for (const id of idNodeMap.keys()) {
-      if (!idsInSyntaxTree.has(id)) {
-        idNodeMap.delete(id);
-      }
+    // If the next scanned arg index is out of bounds, then we are out of scanned args after this one.
+    if (nextScannedArgIndex >= scannedArgs.length - 1) {
+      isOutOfScannedArgs = true;
     }
+
+    currentScannedArgIndex = nextScannedArgIndex;
+    currentScannedArg = scannedArgs[currentScannedArgIndex];
   }
 
-  function forEachNodeInSyntaxTree(callback: (node: Node) => void): void {
-    // We start at the top of the syntax tree and traverse down to the bottom, calling the callback on each node.
-    traverseDown(syntaxTree);
+  function resetForNewArgument(): void {
+    currentDashNode = undefined;
+    currentFlagNode = undefined;
+    currentSeparatorNode = undefined;
+    currentValueNode = undefined;
 
-    function traverseDown(node: Node | SyntaxTree): void {
-      if (node.kind === NodeKind.SyntaxTree) {
-        (node as SyntaxTree).arguments.forEach(traverseDown);
-        return;
-      }
+    singleDashFlag = flagDefaults.singleDash;
+    doubleDashFlag = flagDefaults.doubleDash;
+    moreThanTwoDashesFlag = flagDefaults.moreThanTwoDashes;
+  }
 
-      callback(node);
+  // narrowing functions here
 
-      if (isArgumentNode(node)) {
-        traverseDown(node.dash);
-        traverseDown(node.flag);
-        if (node.separator) {
-          traverseDown(node.separator);
+  function nodeIsArgument(node: Node): node is ArgumentNode {
+    return node.kind === NodeKind.Argument;
+  }
+
+  function scannerNodeIsText(
+    node: ScannerTextNode | ScannerWhitespaceNode | undefined
+  ): node is ScannerTextNode {
+    return node?.kind === ScannerNodeKind.Text;
+  }
+
+  function scannerNodeIsSeparator(
+    node: ScannerTextNode | ScannerWhitespaceNode | undefined
+  ): node is ScannerWhitespaceNode | (ScannerTextNode & { equalsFlag: true }) {
+    return (
+      (node?.kind === ScannerNodeKind.Whitespace || node?.equalsFlag) ?? false
+    );
+  }
+
+  function peekForwardNArgs(
+    n: number
+  ): ScannerTextNode | ScannerWhitespaceNode | undefined {
+    return scannedArgs[currentScannedArgIndex + n];
+  }
+
+  function applyFlagsToNode(node: ParentLessNode, flags: NodeFlags): void {
+    node.flags |= flags;
+  }
+
+  function finalizeSyntaxTreeAndCreateApi(
+    syntaxTree: SyntaxTree,
+    idNodeMap: Map<NodeId, ParentLessNode>
+  ): SyntaxTreeApi {
+    pruneIdNodeMap();
+
+    return {
+      syntaxTree,
+      findNodeById(id: NodeId): ParentLessNode | undefined {
+        return idNodeMap.get(id);
+      },
+      forEachNode: forEachNodeInSyntaxTree,
+    };
+
+    function pruneIdNodeMap(): void {
+      const idsInSyntaxTree: NodeId[] = [];
+
+      forEachNodeInSyntaxTree((node) => {
+        idsInSyntaxTree.push(node.id);
+      });
+
+      for (const id of idNodeMap.keys()) {
+        if (!idsInSyntaxTree.includes(id)) {
+          idNodeMap.delete(id);
         }
-        if (node.value) {
-          traverseDown(node.value);
-        }
       }
+    }
 
-      function isArgumentNode(node: Node): node is ArgumentNode {
-        return node.kind === NodeKind.Argument;
+    function forEachNodeInSyntaxTree(callback: (node: Node) => void): void {
+      // We start at the top of the syntax tree and traverse down to the bottom, calling the callback on each node.
+      traverseDown(syntaxTree);
+
+      function traverseDown(node: Node | SyntaxTree): void {
+        if (node.kind === NodeKind.SyntaxTree) {
+          (node as SyntaxTree).arguments.forEach(traverseDown);
+          return;
+        }
+
+        callback(node);
+
+        if (nodeIsArgument(node)) {
+          traverseDown(node.dash);
+          traverseDown(node.flag);
+          if (node.separator) {
+            traverseDown(node.separator);
+          }
+          if (node.value) {
+            traverseDown(node.value);
+          }
+        }
       }
     }
   }
