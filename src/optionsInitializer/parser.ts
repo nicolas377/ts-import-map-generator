@@ -80,6 +80,7 @@ interface SyntaxTree extends ParentLessNode {
 interface SyntaxTreeApi {
   readonly syntaxTree: SyntaxTree;
   findNodeById(id: NodeId): ParentLessNode | undefined;
+  forEachNode(cb: (node: Node) => void): void;
 }
 
 export function parseSyntaxTreeFromArgsString(
@@ -220,7 +221,7 @@ export function parseSyntaxTreeFromArgsString(
     setupNextScannedArg();
   }
 
-  return createApi(syntaxTree);
+  return finalizeSyntaxTree(syntaxTree, idNodeMap);
 
   function createAndBindArgumentNode(): NodeId {
     const argumentNode = createArgumentNode(
@@ -245,7 +246,7 @@ export function parseSyntaxTreeFromArgsString(
         const forward2Args = peekForwardNArgs(2);
 
         // If two arguments forward is the start of a new argument, this argument ends now.
-        // Note that we don't support --flag= --nextFlag, so we don't need to check for that.
+        // Note that we don't support "--flag= --nextFlag", so we don't need to check for that.
         if (
           forward2Args &&
           forward2Args.kind === ScannerNodeKind.Text &&
@@ -440,15 +441,6 @@ export function parseSyntaxTreeFromArgsString(
     return node;
   }
 
-  function createApi(syntaxTree: SyntaxTree): SyntaxTreeApi {
-    return {
-      syntaxTree,
-      findNodeById(id: NodeId): ParentLessNode | undefined {
-        return idNodeMap.get(id);
-      },
-    };
-  }
-
   function createNodeId(): NodeId {
     let i = 0 as NodeId;
 
@@ -457,5 +449,63 @@ export function parseSyntaxTreeFromArgsString(
     }
 
     return i;
+  }
+}
+
+function finalizeSyntaxTree(
+  syntaxTree: SyntaxTree,
+  idNodeMap: Map<NodeId, ParentLessNode>
+): SyntaxTreeApi {
+  pruneIdNodeMap();
+
+  return {
+    syntaxTree,
+    findNodeById(id: NodeId): ParentLessNode | undefined {
+      return idNodeMap.get(id);
+    },
+    forEachNode: forEachNodeInSyntaxTree,
+  };
+
+  function pruneIdNodeMap(): void {
+    const idsInSyntaxTree = new Set<NodeId>();
+
+    forEachNodeInSyntaxTree((node) => {
+      idsInSyntaxTree.add(node.id);
+    });
+
+    for (const id of idNodeMap.keys()) {
+      if (!idsInSyntaxTree.has(id)) {
+        idNodeMap.delete(id);
+      }
+    }
+  }
+
+  function forEachNodeInSyntaxTree(callback: (node: Node) => void): void {
+    // We start at the top of the syntax tree and traverse down to the bottom, calling the callback on each node.
+    traverseDown(syntaxTree);
+
+    function traverseDown(node: Node | SyntaxTree): void {
+      if (node.kind === NodeKind.SyntaxTree) {
+        (node as SyntaxTree).arguments.forEach(traverseDown);
+        return;
+      }
+
+      callback(node);
+
+      if (isArgumentNode(node)) {
+        traverseDown(node.dash);
+        traverseDown(node.flag);
+        if (node.separator) {
+          traverseDown(node.separator);
+        }
+        if (node.value) {
+          traverseDown(node.value);
+        }
+      }
+
+      function isArgumentNode(node: Node): node is ArgumentNode {
+        return node.kind === NodeKind.Argument;
+      }
+    }
   }
 }

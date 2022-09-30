@@ -44,10 +44,10 @@ const debugLevelNames: Record<DebugLevel, string> = {
 // added by rollup during build
 declare const productionBuild: boolean;
 
-export const Debug: IDebug = class Debug {
-  public static logs: Log[] = [];
+class DebugClass implements IDebug {
+  public logs: Log[] = [];
 
-  private static createMessageString(...message: JSONable[]): string {
+  private createMessageString(...message: JSONable[]): string {
     const stringifyItem = (item: JSONable): string =>
       item === undefined
         ? "undefined"
@@ -68,42 +68,44 @@ export const Debug: IDebug = class Debug {
     return message.map(stringifyItem).join(" ");
   }
 
-  private static logMessage(level: DebugLevel, ...message: JSONable[]): void {
+  private logMessage(level: DebugLevel, ...message: JSONable[]): void {
     if (productionBuild === false) {
       // We need to stringify the message before we log it, because if we don't, parts of the message could be altered.
-      Debug.logs.push({
+      this.logs.push({
         dateNow: Date.now(),
         level,
-        message: Debug.createMessageString(...message),
+        message: this.createMessageString(...message),
       });
     }
   }
 
-  public static error(...message: JSONable[]): void {
-    Debug.logMessage(DebugLevel.Error, ...message);
+  public error(...message: JSONable[]): void {
+    this.logMessage(DebugLevel.Error, ...message);
   }
 
-  public static warn(...message: JSONable[]): void {
-    Debug.logMessage(DebugLevel.Warning, ...message);
+  public warn(...message: JSONable[]): void {
+    this.logMessage(DebugLevel.Warning, ...message);
   }
 
-  public static info(...message: JSONable[]): void {
-    Debug.logMessage(DebugLevel.Info, ...message);
+  public info(...message: JSONable[]): void {
+    this.logMessage(DebugLevel.Info, ...message);
   }
 
-  public static log(...message: JSONable[]): void {
-    Debug.logMessage(DebugLevel.Log, ...message);
+  public log(...message: JSONable[]): void {
+    this.logMessage(DebugLevel.Log, ...message);
   }
 
-  public static debug(...message: JSONable[]): void {
-    Debug.logMessage(DebugLevel.Debug, ...message);
+  public debug(...message: JSONable[]): void {
+    this.logMessage(DebugLevel.Debug, ...message);
   }
 
-  public static trace(...message: JSONable[]): void {
-    Debug.logMessage(DebugLevel.Trace, ...message);
+  public trace(...message: JSONable[]): void {
+    this.logMessage(DebugLevel.Trace, ...message);
   }
-};
+}
 
 export function quoteString(string: string): string {
   return `"${string}"`;
 }
+
+export const Debug = new DebugClass();
