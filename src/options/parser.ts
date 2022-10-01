@@ -17,7 +17,7 @@ const enum NodeKind {
   UnknownText,
 }
 
-const enum NodeFlags {
+export const enum NodeFlags {
   None = 0,
   HasMoreThanTwoDashes = 1 << 0, // This dash node was created from a scanned node of more than two dashes.
   NarrowedFromUnflaggedText = 1 << 1, // This value or flag node was narrowed from an UnknownTextNode by narrowUnknownTextNode().
@@ -65,7 +65,7 @@ interface DashNode extends Node {
   readonly doubleDash: boolean;
 }
 
-interface ArgumentNode extends Node {
+export interface ArgumentNode extends Node {
   readonly kind: NodeKind.Argument;
 
   readonly dash: DashNode;

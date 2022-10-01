@@ -28,6 +28,8 @@ export function arrayIncludesValue<T>(
 
 export const productionBuild =
   process.env.IMG_PROJECT_ENV === "production" ||
-  typeof (process as unknown as Record<PropertyKey, unknown>)[
-    Symbol.for("ts-node.register.instance")
-  ] !== "undefined";
+  // if the environment variable is set, don't check for ts-node
+  (typeof process.env.IMG_PROJECT_ENV === "undefined" &&
+    typeof (process as unknown as Record<PropertyKey, unknown>)[
+      Symbol.for("ts-node.register.instance")
+    ] !== "undefined");
