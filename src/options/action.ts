@@ -1,12 +1,12 @@
-import { idToDataMap, nameToIdMap } from "./arguments";
-import { NodeFlags, parseSyntaxTreeFromArgsString } from "./parser";
+import { ArgumentKind, idToDataMap, nameToIdMap } from "./arguments";
+import { parseSyntaxTreeFromArgsString } from "./parser";
+import { Debug, programOptions } from "utils";
 
 type OptionValue = string | boolean | number;
 
 interface ActionToTake {
-  name: string;
+  id: ArgumentKind;
   value: OptionValue;
-  isDefault: boolean;
 }
 
 export function takeActionFromCliArgs(argsString: string): void {
@@ -20,19 +20,88 @@ export function takeActionFromCliArgs(argsString: string): void {
   const actionsToTake: ActionToTake[] = [];
 
   for (const treeArgument of syntaxTreeApi.syntaxTree.arguments) {
+    const argumentFlagName = treeArgument.flag.text;
     // Try to parse the argument's id from its name. If it can't be parsed, then it's an unknown argument and should be ignored.
-    const argumentId = nameToIdMap.get(treeArgument.flag.text);
+    const [singleOrDoubleDash, argumentId] =
+      nameToIdMap.get(argumentFlagName) ?? [];
+    const optionDetails = idToDataMap.get(argumentId!);
+    const { dash: argumentDash, value: argumentValue } = treeArgument;
 
-    if (argumentId === undefined) {
+    if (
+      singleOrDoubleDash === undefined ||
+      argumentId === undefined ||
+      optionDetails === undefined ||
+      // The argument is known, but has the wrong dash.
+      (singleOrDoubleDash === "single" && argumentDash.singleDash === false) ||
+      (singleOrDoubleDash === "double" && argumentDash.doubleDash === false)
+    ) {
+      // The argument is unknown, so we should ignore it.
+      Debug.warn("Unknown argument: ", argumentFlagName);
       continue;
     }
 
-    // The argument is known, so we can get its data from the map.
-    const optionDetails = idToDataMap.get(argumentId)!;
-    const { value: argumentValue } = treeArgument;
+    // If the argument is a boolean argument, then it doesn't have a value.
+    // If there's no value, then set the value to the default value.
+    // If there is a value, then set the value to the parsed value.
+    if (optionDetails.type === "boolean") {
+      const value =
+        argumentValue === undefined
+          ? true
+          : optionDetails.dataGetter(argumentValue.text);
 
-    // TODO: pick up here
+      if (value instanceof Error) {
+        Debug.warn("Invalid value for argument: ", argumentFlagName);
+        continue;
+      }
+
+      if (optionDetails.validator(value)) {
+        if (value !== optionDetails.defaultValue)
+          addAction(optionDetails.id, value);
+        else
+          Debug.info("Ignoring default value for argument: ", argumentFlagName);
+      } else {
+        Debug.warn("Invalid value for argument: ", argumentFlagName);
+      }
+    } else {
+      if (argumentValue === undefined) {
+        Debug.warn("Missing value for argument: ", argumentFlagName);
+        continue;
+      }
+
+      // The argument is known and has a value, so we should parse it and take the appropriate action.
+      const value = optionDetails.dataGetter(argumentValue.text);
+
+      if (value instanceof Error) {
+        Debug.warn("Invalid value for argument: ", argumentFlagName);
+        continue;
+      }
+
+      if (
+        (optionDetails.validator as (value: string | number) => boolean)(value)
+      ) {
+        if (value !== optionDetails.defaultValue)
+          addAction(optionDetails.id, value);
+        else
+          Debug.info("Ignoring default value for argument: ", argumentFlagName);
+      } else {
+        Debug.warn(
+          "Invalid value",
+          argumentValue.text,
+          "for argument: ",
+          argumentFlagName
+        );
+      }
+    }
   }
 
-  console.log(actionsToTake);
+  for (const action of actionsToTake) {
+    programOptions.setOption(action.id, action.value);
+  }
+
+  function addAction(id: ArgumentKind, value: OptionValue): void {
+    actionsToTake.push({
+      id,
+      value,
+    });
+  }
 }

@@ -25,7 +25,7 @@ export interface Log {
   message: string;
 }
 
-const enum DebugLevel {
+export const enum DebugLevel {
   Error,
   Warning,
   Info,

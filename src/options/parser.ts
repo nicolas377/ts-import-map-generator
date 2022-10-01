@@ -170,6 +170,7 @@ export function parseSyntaxTreeFromArgsString(
       }
 
       resetForNewArgument();
+      setupNextScannedArg();
       continue;
     }
 
@@ -196,17 +197,14 @@ export function parseSyntaxTreeFromArgsString(
 
     // Check if everything that's needed for a argument node has been created.
     // If it has, then create the argument node, bind it to the syntax tree, and clean up for the next node.
-    if (canNaturallyCreateArgumentNode()) {
-      createAndBindArgumentNode();
-      resetForNewArgument();
-    }
-
     // If there's no more left scanned nodes left, and we can't naturally make an argument node, then check if we can forcefully create one.
     // We need a dash node and a flag node to forcefully create a argument node.
-    else if (isOutOfScannedArgs && currentDashNode && currentFlagNode) {
-      // If we can, do so, bind it to the syntax tree, and exit the loop.
-      Debug.warn("Unexpected end of arguments.");
+    if (
+      canNaturallyCreateArgumentNode() ||
+      (isOutOfScannedArgs && currentDashNode && currentFlagNode)
+    ) {
       createAndBindArgumentNode();
+      resetForNewArgument();
     }
 
     if (isOutOfScannedArgs) {
@@ -284,7 +282,7 @@ export function parseSyntaxTreeFromArgsString(
       if (doubleDashFlag) {
         const forward2Args = peekForwardNArgs(2);
 
-        // If two arguments forward is the start of a new argument, this argument ends now.
+        // If two arguments forward is the start of a new argument or is the end of the string, this argument ends now.
         // Note that we don't support "--flag= --nextFlag", so we don't need to check for that.
         if (scannerNodeIsText(forward2Args) && forward2Args.dashFlag) {
           canCreateArgument = true;
@@ -401,8 +399,6 @@ export function parseSyntaxTreeFromArgsString(
   // helper functions here
 
   function setupNextScannedArg(): void {
-    if (isOutOfScannedArgs) return;
-
     const nextScannedArgIndex = currentScannedArgIndex + 1;
 
     // If the next scanned arg index is out of bounds, then we are out of scanned args after this one.
