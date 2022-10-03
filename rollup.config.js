@@ -78,7 +78,7 @@ const config = [
       file: "./dist/api.d.ts",
       format: "esm",
     },
-    plugins: [dts()],
+    plugins: [dts(), json({ preferConst: true })],
   },
 ];
 

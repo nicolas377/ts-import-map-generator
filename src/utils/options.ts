@@ -1,18 +1,25 @@
+import { keysOfObject } from "./generalHelpers";
 import { ArgumentKind, ArgumentType, idToDataMap } from "options/arguments";
 
 const argumentKindToOptionNameMap: Record<ArgumentKind, keyof IOptions> = {
   [ArgumentKind.Help]: "printHelpAndExit",
   [ArgumentKind.Version]: "printVersionAndExit",
+  [ArgumentKind.Entrypoint]: "entrypointLocation",
+  [ArgumentKind.GraphMaxDepth]: "graphMaxDepth",
+  [ArgumentKind.IgnoreFiles]: "ignoreFiles",
 };
 
 interface IOptions {
   setOption(kind: ArgumentKind, value: ArgumentType): void;
   printHelpAndExit: boolean;
   printVersionAndExit: boolean;
+  entrypointLocation: string;
+  graphMaxDepth: number;
+  ignoreFiles: string;
 }
 
 class OptionsClass {
-  private allOptions = [ArgumentKind.Help, ArgumentKind.Version] as const;
+  private allOptions = keysOfObject(argumentKindToOptionNameMap);
 
   private options: Record<ArgumentKind, ArgumentType>;
 

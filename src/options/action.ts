@@ -1,4 +1,9 @@
-import { ArgumentKind, idToDataMap, nameToIdMap } from "./arguments";
+import {
+  ArgumentKind,
+  idToDataMap,
+  nameToIdMap,
+  requiredArgumentIds,
+} from "./arguments";
 import { parseSyntaxTreeFromArgsString } from "./parser";
 import { Debug, programOptions } from "utils";
 
@@ -94,8 +99,20 @@ export function takeActionFromCliArgs(argsString: string): void {
     }
   }
 
-  for (const action of actionsToTake) {
-    programOptions.setOption(action.id, action.value);
+  // Ensure all required arguments are present.
+  const allArgumentIds = actionsToTake.map((action) => action.id);
+  for (const requiredArgumentId of requiredArgumentIds) {
+    if (!allArgumentIds.includes(requiredArgumentId)) {
+      throw new Error(
+        `Missing required argument: ${
+          idToDataMap.get(requiredArgumentId)!.name
+        }`
+      );
+    }
+  }
+
+  for (const { id, value } of actionsToTake) {
+    programOptions.setOption(id, value);
   }
 
   function addAction(id: ArgumentKind, value: OptionValue): void {
