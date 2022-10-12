@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "description": "Creates import maps based from a typescript entry point file.",
   "bin": "cli.js",
-  "types": "dist/api.d.ts",
   "exports": {
     ".": {
       "import": "./dist/api.prod.js",
-      "require": "./dist/api.prod.cjs"
+      "require": "./dist/api.prod.cjs",
+      "types": "./dist/api.d.ts"
     }
   },
   "files": [
@@ -16,7 +16,7 @@
     "dist/*.prod.mjs"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "check-format": "prettier --ignore-path=.gitignore --check .",
     "lint": "eslint --ignore-path=.gitignore .",
     "prepare": "husky install",

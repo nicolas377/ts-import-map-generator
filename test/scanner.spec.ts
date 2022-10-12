@@ -1,5 +1,5 @@
 import { removeDateFromLog } from "./helpers";
-import { scanArgs } from "options/scanner";
+import { scanArgs } from "cli/options/scanner";
 import { Debug } from "utils";
 
 describe.each([

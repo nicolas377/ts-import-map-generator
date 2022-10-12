@@ -1,0 +1,1 @@
+export { rawVersion } from "../version";

@@ -1,19 +1,20 @@
-// @ts-check
 import json from "@rollup/plugin-json";
 import replace from "@rollup/plugin-replace";
 import typescript from "@rollup/plugin-typescript";
-import merge from "lodash.merge";
+import { RollupOptions } from "rollup";
 import dts from "rollup-plugin-dts";
 import externals from "rollup-plugin-node-externals";
 
-/** @param {boolean} dev */
-function createPlugins(dev) {
+type apiOrCliType = "api" | "cli";
+
+function createPlugins(dev: boolean, apiOrCli: apiOrCliType) {
   return dev
     ? [
         replace({
           preventAssignment: true,
           values: {
             "process.env.IMG_PROJECT_ENV": JSON.stringify("development"),
+            "process.env.IMG_PROJECT_RUN_TYPE": JSON.stringify(apiOrCli),
           },
         }),
         typescript({
@@ -28,6 +29,7 @@ function createPlugins(dev) {
           preventAssignment: true,
           values: {
             "process.env.IMG_PROJECT_ENV": JSON.stringify("production"),
+            "process.env.IMG_PROJECT_RUN_TYPE": JSON.stringify(apiOrCli),
           },
         }),
         typescript({
@@ -39,20 +41,18 @@ function createPlugins(dev) {
       ];
 }
 
-/**
- * @param {import("rollup").RollupOptions} overrides
- * @param {object} options
- * @param {"api" | "cli"} options.apiOrCli
- * @param {boolean} options.dev
- * @param {"cjs" | "esm"} options.format
- */
-function createConfig(overrides, { apiOrCli, dev, format }) {
-  return merge(overrides, {
-    input:
-      apiOrCli === "api"
-        ? "./src/entrypoints/api.ts"
-        : "./src/entrypoints/cli.ts",
-    treeshake: dev ? undefined : "recommended",
+function createConfig({
+  apiOrCli,
+  dev,
+  format,
+}: {
+  apiOrCli: "api" | "cli";
+  dev: boolean;
+  format: "cjs" | "esm";
+}): RollupOptions {
+  return {
+    input: `./src/${apiOrCli}/entrypoint.ts`,
+    treeshake: dev ? "safest" : "recommended",
     output: {
       sourcemap: true,
       file: `dist/${apiOrCli}.${dev ? "dev" : "prod"}.${
@@ -60,20 +60,19 @@ function createConfig(overrides, { apiOrCli, dev, format }) {
       }`,
       format,
     },
-    plugins: createPlugins(dev),
-  });
+    plugins: createPlugins(dev, apiOrCli),
+  };
 }
 
-/** @type {import("rollup").RollupOptions[]} */
 const config = [
-  createConfig({}, { apiOrCli: "cli", dev: true, format: "cjs" }),
-  createConfig({}, { apiOrCli: "cli", dev: false, format: "cjs" }),
-  createConfig({}, { apiOrCli: "api", dev: true, format: "esm" }),
-  createConfig({}, { apiOrCli: "api", dev: false, format: "esm" }),
-  createConfig({}, { apiOrCli: "api", dev: true, format: "cjs" }),
-  createConfig({}, { apiOrCli: "api", dev: false, format: "cjs" }),
+  createConfig({ apiOrCli: "cli", dev: true, format: "cjs" }),
+  createConfig({ apiOrCli: "cli", dev: false, format: "cjs" }),
+  createConfig({ apiOrCli: "api", dev: true, format: "esm" }),
+  createConfig({ apiOrCli: "api", dev: false, format: "esm" }),
+  createConfig({ apiOrCli: "api", dev: true, format: "cjs" }),
+  createConfig({ apiOrCli: "api", dev: false, format: "cjs" }),
   {
-    input: "./src/entrypoints/api.ts",
+    input: "./src/api/entrypoint.ts",
     output: {
       file: "./dist/api.d.ts",
       format: "esm",

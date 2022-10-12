@@ -1,7 +1,7 @@
 import { keysOfObject } from "./generalHelpers";
-import { ArgumentKind, ArgumentType, idToDataMap } from "options/arguments";
+import { ArgumentKind, ArgumentType, idToDataMap } from "cli/options/arguments";
 
-const argumentKindToOptionNameMap: Record<ArgumentKind, keyof IOptions> = {
+const argumentKindToOptionNameMap: Readonly<Record<ArgumentKind, keyof IOptions>> = {
   [ArgumentKind.Help]: "printHelpAndExit",
   [ArgumentKind.Version]: "printVersionAndExit",
   [ArgumentKind.Entrypoint]: "entrypointLocation",
@@ -10,6 +10,7 @@ const argumentKindToOptionNameMap: Record<ArgumentKind, keyof IOptions> = {
 };
 
 interface IOptions {
+  getOption(kind: ArgumentKind): ArgumentType;
   setOption(kind: ArgumentKind, value: ArgumentType): void;
   printHelpAndExit: boolean;
   printVersionAndExit: boolean;
@@ -23,16 +24,18 @@ class OptionsClass {
 
   private options: Record<ArgumentKind, ArgumentType>;
 
+  public getOption(kind: ArgumentKind): ArgumentType {
+    return this.options[kind];
+  }
+
   public setOption(kind: ArgumentKind, value: ArgumentType): void {
-    (this[
-      argumentKindToOptionNameMap[kind] as keyof OptionsClass
-    ] as unknown as ArgumentType) = value;
+    this.options[kind] = value;
   }
 
   constructor() {
     // kind should be one of all of the options, so this validates that at compile-time.
     this.options = this.allOptions.reduce((acc, kind: ArgumentKind) => {
-      const { defaultValue } = idToDataMap.get(kind) ?? {};
+      const { defaultValue } = idToDataMap.get(+kind) ?? {};
 
       if (defaultValue === undefined) {
         throw new Error(`No default value for argument kind: ${kind}`);
@@ -43,7 +46,7 @@ class OptionsClass {
     }, {} as Record<ArgumentKind, ArgumentType>);
 
     for (const kind of this.allOptions) {
-      const optionData = idToDataMap.get(kind);
+      const optionData = idToDataMap.get(+kind);
 
       if (optionData === undefined) {
         throw new Error(`No option data for argument kind: ${kind}`);

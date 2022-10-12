@@ -75,6 +75,8 @@ function createArgument(data: ArgumentData): void {
   }
 }
 
+export const missingArgumentSymbol = Symbol.for("missing");
+
 function numberDataGetter(value: string): number {
   return Number.parseInt(value, 10);
 }
@@ -135,7 +137,7 @@ createArgument({
   description: "The entrypoint to generate an import map from.",
   required: true,
   type: "string",
-  defaultValue: "",
+  defaultValue: missingArgumentSymbol as unknown as string,
   singleDashNames: [],
   doubleDashNames: ["entrypoint"],
   dataGetter: (value) => value,

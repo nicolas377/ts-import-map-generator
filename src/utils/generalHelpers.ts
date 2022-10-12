@@ -33,3 +33,5 @@ export const productionBuild =
     typeof (process as unknown as Record<PropertyKey, unknown>)[
       Symbol.for("ts-node.register.instance")
     ] !== "undefined");
+
+export const isCli = process.env.IMG_PROJECT_RUN_TYPE === "cli";

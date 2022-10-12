@@ -1,5 +1,5 @@
 import { removeDateFromLog } from "./helpers";
-import { takeActionFromCliArgs } from "options/action";
+import { takeActionFromCliArgs } from "cli/options/action";
 import { Debug, programOptions } from "utils";
 
 describe("takeActionFromCliArgs", () => {

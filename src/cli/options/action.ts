@@ -1,17 +1,15 @@
 import {
   ArgumentKind,
+  ArgumentType,
   idToDataMap,
   nameToIdMap,
-  requiredArgumentIds,
 } from "./arguments";
 import { parseSyntaxTreeFromArgsString } from "./parser";
 import { Debug, programOptions } from "utils";
 
-type OptionValue = string | boolean | number;
-
 interface ActionToTake {
   id: ArgumentKind;
-  value: OptionValue;
+  value: ArgumentType;
 }
 
 export function takeActionFromCliArgs(argsString: string): void {
@@ -99,23 +97,11 @@ export function takeActionFromCliArgs(argsString: string): void {
     }
   }
 
-  // Ensure all required arguments are present.
-  const allArgumentIds = actionsToTake.map((action) => action.id);
-  for (const requiredArgumentId of requiredArgumentIds) {
-    if (!allArgumentIds.includes(requiredArgumentId)) {
-      throw new Error(
-        `Missing required argument: ${
-          idToDataMap.get(requiredArgumentId)!.name
-        }`
-      );
-    }
-  }
-
   for (const { id, value } of actionsToTake) {
     programOptions.setOption(id, value);
   }
 
-  function addAction(id: ArgumentKind, value: OptionValue): void {
+  function addAction(id: ArgumentKind, value: ArgumentType): void {
     actionsToTake.push({
       id,
       value,

@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "commonjs",
+    "module": "esnext",
     "baseUrl": "./src",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "sourceMap": true,
     "esModuleInterop": true,

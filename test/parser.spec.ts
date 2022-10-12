@@ -1,5 +1,5 @@
 import { removeDateFromLog } from "./helpers";
-import { parseSyntaxTreeFromArgsString } from "options/parser";
+import { parseSyntaxTreeFromArgsString } from "cli/options/parser";
 import { Debug, DebugLevel } from "utils";
 
 describe("parseSyntaxTreeFromArgsString", () => {

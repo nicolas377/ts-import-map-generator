@@ -1,4 +1,4 @@
-import { productionBuild } from "utils";
+import { productionBuild } from "./generalHelpers";
 
 type JSONable =
   | string
