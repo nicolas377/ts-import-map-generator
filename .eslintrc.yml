@@ -22,6 +22,10 @@ rules:
     - off
   "@typescript-eslint/ban-types":
     - off
+  "@typescript-eslint/no-namespace":
+    - off
+  no-inner-declarations:
+    - off
   import/order:
     - error
     - alphabetize:

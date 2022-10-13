@@ -1,1 +1,1 @@
-export { rawVersion } from "../version";
+export { programVersion } from "version";

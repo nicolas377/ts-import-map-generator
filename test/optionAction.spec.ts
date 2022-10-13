@@ -1,20 +1,13 @@
-import { removeDateFromLog } from "./helpers";
 import { takeActionFromCliArgs } from "cli/options/action";
-import { Debug, programOptions } from "utils";
+import { programOptions } from "utils";
 
 describe("takeActionFromCliArgs", () => {
-  afterEach(() => {
-    Debug.logs = [];
-  });
-
   it("should take action based on the arguments", () => {
     const argsString = "--help --version";
     takeActionFromCliArgs(argsString);
 
     expect(programOptions.printHelpAndExit).toBe(true);
     expect(programOptions.printVersionAndExit).toBe(true);
-
-    expect(Debug.logs.map(removeDateFromLog)).toMatchSnapshot();
   });
 
   const testStrings = [
@@ -32,7 +25,6 @@ describe("takeActionFromCliArgs", () => {
     (argsString) => {
       takeActionFromCliArgs(argsString);
 
-      expect(Debug.logs.map(removeDateFromLog)).toMatchSnapshot("logs");
       expect(programOptions).toMatchSnapshot("programOptions");
     }
   );

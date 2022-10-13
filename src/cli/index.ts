@@ -4,11 +4,13 @@ import {
   requiredArgumentIds,
 } from "./options/arguments";
 import { initializeOptionsFromCliArgs } from "./options/index";
-import { programOptions } from "utils";
-import { programVersion } from "version";
+import { Debug, programOptions } from "utils";
+import { generatorVersion, programVersion } from "version";
 
 export function runCli(): void {
   initializeOptionsFromCliArgs();
+
+  console.log(generatorVersion);
 
   if (programOptions.printHelpAndExit) {
     printVersion();
@@ -18,16 +20,13 @@ export function runCli(): void {
   } else {
     // Check that all required arguments are present.
     for (const requiredArgumentId of requiredArgumentIds) {
-      if (
-        (programOptions.getOption(requiredArgumentId) as unknown as symbol) ===
-        missingArgumentSymbol
-      ) {
-        throw new Error(
-          `Missing required argument: ${
-            idToDataMap.get(requiredArgumentId)!.name
-          }`
-        );
-      }
+      Debug.assert(
+        (programOptions.getOption(requiredArgumentId) as unknown as symbol) !==
+          missingArgumentSymbol,
+        `Missing required argument: ${
+          idToDataMap.get(requiredArgumentId)!.name
+        }`
+      );
     }
   }
 }

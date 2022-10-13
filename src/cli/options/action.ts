@@ -5,7 +5,7 @@ import {
   nameToIdMap,
 } from "./arguments";
 import { parseSyntaxTreeFromArgsString } from "./parser";
-import { Debug, programOptions } from "utils";
+import { programOptions } from "utils";
 
 interface ActionToTake {
   id: ArgumentKind;
@@ -39,7 +39,6 @@ export function takeActionFromCliArgs(argsString: string): void {
       (singleOrDoubleDash === "double" && argumentDash.doubleDash === false)
     ) {
       // The argument is unknown, so we should ignore it.
-      Debug.warn("Unknown argument: ", argumentFlagName);
       continue;
     }
 
@@ -52,48 +51,28 @@ export function takeActionFromCliArgs(argsString: string): void {
           ? true
           : optionDetails.dataGetter(argumentValue.text);
 
-      if (value instanceof Error) {
-        Debug.warn("Invalid value for argument: ", argumentFlagName);
-        continue;
-      }
+      if (value instanceof Error) continue;
 
-      if (optionDetails.validator(value)) {
-        if (value !== optionDetails.defaultValue)
-          addAction(optionDetails.id, value);
-        else
-          Debug.info("Ignoring default value for argument: ", argumentFlagName);
-      } else {
-        Debug.warn("Invalid value for argument: ", argumentFlagName);
-      }
+      if (
+        optionDetails.validator(value) &&
+        value !== optionDetails.defaultValue
+      )
+        addAction(optionDetails.id, value);
     } else {
-      if (argumentValue === undefined) {
-        Debug.warn("Missing value for argument: ", argumentFlagName);
-        continue;
-      }
+      if (argumentValue === undefined) continue;
 
       // The argument is known and has a value, so we should parse it and take the appropriate action.
       const value = optionDetails.dataGetter(argumentValue.text);
 
-      if (value instanceof Error) {
-        Debug.warn("Invalid value for argument: ", argumentFlagName);
-        continue;
-      }
+      if (value instanceof Error) continue;
 
       if (
-        (optionDetails.validator as (value: string | number) => boolean)(value)
-      ) {
-        if (value !== optionDetails.defaultValue)
-          addAction(optionDetails.id, value);
-        else
-          Debug.info("Ignoring default value for argument: ", argumentFlagName);
-      } else {
-        Debug.warn(
-          "Invalid value",
-          argumentValue.text,
-          "for argument: ",
-          argumentFlagName
-        );
-      }
+        (optionDetails.validator as (value: string | number) => boolean)(
+          value
+        ) &&
+        value !== optionDetails.defaultValue
+      )
+        addAction(optionDetails.id, value);
     }
   }
 

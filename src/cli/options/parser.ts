@@ -4,7 +4,6 @@ import {
   TextNodeWithFlags as ScannerTextNode,
   WhitespaceNode as ScannerWhitespaceNode,
 } from "./scanner";
-import { Debug } from "utils";
 
 const enum NodeKind {
   SyntaxTree,
@@ -135,23 +134,15 @@ export function parseSyntaxTreeFromArgsString(
     // If we encounter whitespace or an equals sign, check if we're creating a long flag argument and the flag is already set.
     if (scannerNodeIsSeparator(currentScannedArg)) {
       // We won't do anything else with a separator node, so we can just discard it if we don't do anything now.
-      if (currentFlagNode) {
-        if (isCurrentlyCreatingArgument() && doubleDashFlag) {
-          // If we are, we should create and bind a separator node.
-          currentSeparatorNode = createParentLessSeparatorNode();
-        } else {
-          // Otherwise, log a warning.
-          Debug.warn("Unexpected whitespace or equals sign in argument.");
-        }
+      if (currentFlagNode && isCurrentlyCreatingArgument() && doubleDashFlag) {
+        // If we are, we should create and bind a separator node.
+        currentSeparatorNode = createParentLessSeparatorNode();
       }
     }
 
     // If we encounter dashes, check if we are already creating an argument.
     else if (currentScannedArg.dashFlag) {
-      if (isCurrentlyCreatingArgument()) {
-        // If we are, ignore the dashes and log a warning.
-        Debug.warn("Unexpected dashes in argument.");
-      } else {
+      if (!isCurrentlyCreatingArgument()) {
         // If we aren't, create and bind a dash node.
         singleDashFlag = currentScannedArg.text.length === 1;
         doubleDashFlag = currentScannedArg.text.length >= 2;
@@ -184,8 +175,7 @@ export function parseSyntaxTreeFromArgsString(
       const narrowedTextNodeOrFalse = narrowUnknownTextNode(unknownTextNode);
 
       if (narrowedTextNodeOrFalse === false) {
-        // If we can't narrow the unknown text node, we should log a warning.
-        Debug.warn("Unknown text node.");
+        // Do nothing. We don't want to bind the node.
       } else if (narrowedTextNodeOrFalse.kind === NodeKind.Flag) {
         // If we can narrow the unknown text node to a flag node, we should create and bind a flag node.
         currentFlagNode = narrowedTextNodeOrFalse;
@@ -221,9 +211,8 @@ export function parseSyntaxTreeFromArgsString(
   function narrowUnknownTextNode(
     unknownTextNode: ExcludeParent<UnknownTextNode>
   ): ExcludeParent<FlagNode> | ExcludeParent<ValueNode> | false {
-    // If we're not currently creating an argument, then we can't narrow the unknown text node, so we log a warning and return false.
+    // If we're not currently creating an argument, then we can't narrow the unknown text node, so we return false.
     if (!isCurrentlyCreatingArgument()) {
-      Debug.warn("Unexpected text node between arguments.");
       return false;
     }
 

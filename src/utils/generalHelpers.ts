@@ -1,3 +1,17 @@
+export type AnyFunction = (...args: never[]) => void;
+
+export const emptyArray = [];
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export function noopFunction(): void {}
+
+// TODO: use plain Array.isArray once ts updates the Array.isArray defs to support narrowing readonly arrays
+export function checkIsReadonlyArray(
+  value: unknown
+): value is readonly unknown[] {
+  return Array.isArray(value);
+}
+
 export function keysOfObject<T extends PropertyKey>(
   obj: Record<T, unknown>
 ): T[] {

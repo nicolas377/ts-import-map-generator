@@ -1,110 +1,155 @@
-import { productionBuild } from "./generalHelpers";
+import { AnyFunction } from "./generalHelpers";
 
-type JSONable =
-  | string
-  | number
-  | boolean
-  | undefined
-  | JSONable[]
-  | { [key: string]: JSONable };
-
-interface IDebug {
-  logs: Log[];
-
-  error(...message: JSONable[]): void;
-  warn(...message: JSONable[]): void;
-  info(...message: JSONable[]): void;
-  log(...message: JSONable[]): void;
-  debug(...message: JSONable[]): void;
-  trace(...message: JSONable[]): void;
+export interface LoggingHost {
+  log(level: LogLevel, s: string): void;
 }
 
-export interface Log {
-  dateNow: number;
-  level: DebugLevel;
-  message: string;
-}
-
-export const enum DebugLevel {
+export const enum LogLevel {
+  Off,
   Error,
   Warning,
   Info,
-  Log,
-  Debug,
-  Trace,
+  Verbose,
 }
 
-const debugLevelNames: Record<DebugLevel, string> = {
-  [DebugLevel.Error]: "ERROR",
-  [DebugLevel.Warning]: "WARN",
-  [DebugLevel.Info]: "INFO",
-  [DebugLevel.Log]: "LOG",
-  [DebugLevel.Debug]: "DEBUG",
-  [DebugLevel.Trace]: "TRACE",
-};
+export namespace Debug {
+  // eslint-disable-next-line prefer-const
+  export let currentLogLevel = LogLevel.Warning;
+  export let loggingHost: LoggingHost | undefined;
 
-class DebugClass implements IDebug {
-  public logs: Log[] = [];
-
-  private createMessageString(...message: JSONable[]): string {
-    const stringifyItem = (item: JSONable): string =>
-      item === undefined
-        ? "undefined"
-        : typeof item === "string"
-        ? item
-        : typeof item === "number"
-        ? item.toString()
-        : typeof item === "boolean"
-        ? item.toString()
-        : Array.isArray(item)
-        ? `[${item.map(stringifyItem).join(", ")}]`
-        : typeof item === "object"
-        ? `{${Object.entries(item)
-            .map(([key, value]) => `${key}: ${stringifyItem(value)}`)
-            .join(", ")}}`
-        : item;
-
-    return message.map(stringifyItem).join(" ");
+  function shouldLog(level: LogLevel): boolean {
+    return currentLogLevel <= level;
   }
 
-  private logMessage(level: DebugLevel, ...message: JSONable[]): void {
-    if (productionBuild === false) {
-      // We need to stringify the message before we log it, because if we don't, parts of the message could be altered.
-      this.logs.push({
-        dateNow: Date.now(),
-        level,
-        message: this.createMessageString(...message),
-      });
+  function logMessage(level: LogLevel, s: string) {
+    if (loggingHost && shouldLog(level)) {
+      loggingHost.log(level, s);
     }
   }
 
-  public error(...message: JSONable[]): void {
-    this.logMessage(DebugLevel.Error, ...message);
+  export namespace log {
+    export function error(s: string) {
+      logMessage(LogLevel.Error, s);
+    }
+
+    export function warn(s: string): void {
+      logMessage(LogLevel.Warning, s);
+    }
+
+    export function info(s: string): void {
+      logMessage(LogLevel.Info, s);
+    }
+
+    export function trace(s: string): void {
+      logMessage(LogLevel.Verbose, s);
+    }
   }
 
-  public warn(...message: JSONable[]): void {
-    this.logMessage(DebugLevel.Warning, ...message);
+  export function fail(message?: string, stackCrawlMark?: AnyFunction): never {
+    // This is a great place to put a breakpoint; whenever we fail, we'll stop here.
+    const e = new Error(
+      message ? `Debug Failure. ${message}` : "Debug Failure."
+    );
+
+    Error.captureStackTrace(e, stackCrawlMark || fail);
+
+    throw e;
   }
 
-  public info(...message: JSONable[]): void {
-    this.logMessage(DebugLevel.Info, ...message);
+  export function assert(
+    expression: unknown,
+    message?: string,
+    stackCrawlMark?: AnyFunction
+  ): asserts expression {
+    if (!expression) {
+      fail(
+        message ? `False expression: ${message}` : "False expression.",
+        stackCrawlMark || assert
+      );
+    }
   }
 
-  public log(...message: JSONable[]): void {
-    this.logMessage(DebugLevel.Log, ...message);
+  export function assertEqual<T>(
+    a: T,
+    b: T,
+    msg?: string,
+    msg2?: string,
+    stackCrawlMark?: AnyFunction
+  ) {
+    if (a !== b) {
+      const message = msg ? (msg2 ? `${msg} ${msg2}` : msg) : "";
+      fail(`Expected ${a} === ${b}. ${message}`, stackCrawlMark || assertEqual);
+    }
   }
 
-  public debug(...message: JSONable[]): void {
-    this.logMessage(DebugLevel.Debug, ...message);
+  export function assertLessThan(
+    a: number,
+    b: number,
+    msg?: string,
+    stackCrawlMark?: AnyFunction
+  ): void {
+    if (a >= b) {
+      fail(
+        `Expected ${a} < ${b}. ${msg || ""}`,
+        stackCrawlMark || assertLessThan
+      );
+    }
   }
 
-  public trace(...message: JSONable[]): void {
-    this.logMessage(DebugLevel.Trace, ...message);
+  export function assertLessThanOrEqual(
+    a: number,
+    b: number,
+    stackCrawlMark?: AnyFunction
+  ): void {
+    if (a > b) {
+      fail(`Expected ${a} <= ${b}`, stackCrawlMark || assertLessThanOrEqual);
+    }
+  }
+
+  export function assertGreaterThanOrEqual(
+    a: number,
+    b: number,
+    stackCrawlMark?: AnyFunction
+  ): void {
+    if (a < b) {
+      fail(`Expected ${a} >= ${b}`, stackCrawlMark || assertGreaterThanOrEqual);
+    }
+  }
+
+  export function assertIsDefined<T>(
+    value: T,
+    message?: string,
+    stackCrawlMark?: AnyFunction
+  ): asserts value is NonNullable<T> {
+    if (value === undefined || value === null) {
+      fail(message, stackCrawlMark || assertIsDefined);
+    }
+  }
+
+  export function checkDefined<T>(
+    value: T | null | undefined,
+    message?: string,
+    stackCrawlMark?: AnyFunction
+  ): T {
+    assertIsDefined(value, message, stackCrawlMark || checkDefined);
+    return value;
+  }
+
+  export function assertEachIsDefined<T>(
+    value: readonly T[],
+    message?: string,
+    stackCrawlMark?: AnyFunction
+  ): asserts value is readonly NonNullable<T>[] {
+    for (const v of value) {
+      assertIsDefined(v, message, stackCrawlMark || assertEachIsDefined);
+    }
+  }
+
+  export function assertNever(
+    value: never,
+    message = "Expected function to never be called",
+    stackCrawlMark?: AnyFunction
+  ): never {
+    return fail(message, stackCrawlMark || assertNever);
   }
 }
-
-export function quoteString(string: string): string {
-  return `"${string}"`;
-}
-
-export const Debug = new DebugClass();

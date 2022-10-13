@@ -1,6 +1,4 @@
-import { removeDateFromLog } from "./helpers";
 import { scanArgs } from "cli/options/scanner";
-import { Debug } from "utils";
 
 describe.each([
   "--name=value --name value --bool-name= --bool-name -b --name=",
@@ -11,12 +9,5 @@ describe.each([
     const syntaxTree = [...scanArgs(argString)];
 
     expect(syntaxTree).toMatchSnapshot();
-  });
-
-  test("Log snapshot", () => {
-    // just running the generator all the way through to get logs
-    [...scanArgs(argString)];
-
-    expect(Debug.logs.map(removeDateFromLog)).toMatchSnapshot();
   });
 });

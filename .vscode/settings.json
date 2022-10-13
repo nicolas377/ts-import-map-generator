@@ -1,4 +1,5 @@
 {
   "conventionalCommits.scopes": ["repo", "gh"],
-  "jest.autoRun": "off"
+  "jest.autoRun": "off",
+  "cSpell.words": ["treeshake"]
 }

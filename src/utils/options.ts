@@ -1,7 +1,10 @@
+import { Debug } from "./debug";
 import { keysOfObject } from "./generalHelpers";
 import { ArgumentKind, ArgumentType, idToDataMap } from "cli/options/arguments";
 
-const argumentKindToOptionNameMap: Readonly<Record<ArgumentKind, keyof IOptions>> = {
+const argumentKindToOptionNameMap: Readonly<
+  Record<ArgumentKind, keyof IOptions>
+> = {
   [ArgumentKind.Help]: "printHelpAndExit",
   [ArgumentKind.Version]: "printVersionAndExit",
   [ArgumentKind.Entrypoint]: "entrypointLocation",
@@ -37,9 +40,10 @@ class OptionsClass {
     this.options = this.allOptions.reduce((acc, kind: ArgumentKind) => {
       const { defaultValue } = idToDataMap.get(+kind) ?? {};
 
-      if (defaultValue === undefined) {
-        throw new Error(`No default value for argument kind: ${kind}`);
-      }
+      Debug.assertIsDefined(
+        defaultValue,
+        `No default value for argument kind ${kind}`
+      );
 
       acc[kind] = defaultValue;
       return acc;
@@ -48,9 +52,10 @@ class OptionsClass {
     for (const kind of this.allOptions) {
       const optionData = idToDataMap.get(+kind);
 
-      if (optionData === undefined) {
-        throw new Error(`No option data for argument kind: ${kind}`);
-      }
+      Debug.assertIsDefined(
+        optionData,
+        `No option data for argument kind ${kind}`
+      );
 
       Object.defineProperty(this, argumentKindToOptionNameMap[kind], {
         configurable: false,

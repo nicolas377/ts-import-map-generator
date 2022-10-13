@@ -1,12 +1,6 @@
-import { removeDateFromLog } from "./helpers";
 import { parseSyntaxTreeFromArgsString } from "cli/options/parser";
-import { Debug, DebugLevel } from "utils";
 
 describe("parseSyntaxTreeFromArgsString", () => {
-  afterEach(() => {
-    Debug.logs = [];
-  });
-
   it("should parse a string of arguments into a syntax tree", () => {
     const argsString = "--help --version";
     const { syntaxTree } = parseSyntaxTreeFromArgsString(argsString);
@@ -27,18 +21,9 @@ describe("parseSyntaxTreeFromArgsString", () => {
     "--some-val=value --name=value --name value --bool-name -b",
   ];
 
-  // expect no warnings or errors for all test cases
-  test.each(testCases)("no warnings for %p", (argString) => {
-    parseSyntaxTreeFromArgsString(argString);
-    expect(
-      Debug.logs.filter((log) => log.level <= DebugLevel.Warning)
-    ).toHaveLength(0);
-  });
-
   test.each(testCases)("snapshot testing for %s", (argsString) => {
     const { syntaxTree } = parseSyntaxTreeFromArgsString(argsString);
 
     expect(syntaxTree).toMatchSnapshot();
-    expect(Debug.logs.map(removeDateFromLog)).toMatchSnapshot();
   });
 });
