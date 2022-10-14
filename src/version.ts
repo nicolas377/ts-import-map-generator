@@ -10,8 +10,6 @@ import {
 // Implements the SemVer 2.0 spec
 // A lot of this code is borrowed from typescript's semver.ts, but repurposed for our purposes
 export class Semver {
-  static readonly zero = new Semver(0, 0, 0, ["0"]);
-
   public readonly major: number;
   public readonly minor: number;
   public readonly patch: number;
@@ -171,6 +169,16 @@ function parseSemverComponents(text: string): SemverComponents | undefined {
   };
 }
 
-export const generatorVersion = new Semver(programVersion);
+let generatorVersion: Semver | undefined;
+
+export function getGeneratorVersion(): Semver {
+  generatorVersion ??= new Semver(programVersion);
+  return generatorVersion;
+}
+
+// This should only be used in testing
+export function setGeneratorVersion(version: Semver) {
+  generatorVersion = version;
+}
 
 export { programVersion };

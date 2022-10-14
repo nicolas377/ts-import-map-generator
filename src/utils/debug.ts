@@ -4,7 +4,7 @@ import {
   noopFunction,
   objectHasProperty,
 } from "./generalHelpers";
-import { generatorVersion, Semver } from "version";
+import { getGeneratorVersion, Semver } from "version";
 
 export interface LoggingHost {
   log(level: LogLevel, s: string): void;
@@ -259,9 +259,10 @@ export namespace Debug {
     const shouldError =
       options.error ||
       (errorAfter &&
-        generatorVersion.compareTo(errorAfter) === Comparison.GreaterThan);
+        getGeneratorVersion().compareTo(errorAfter) === Comparison.GreaterThan);
     const shouldWarn =
-      !warnAfter || generatorVersion.compareTo(warnAfter) >= Comparison.Equal;
+      !warnAfter ||
+      getGeneratorVersion().compareTo(warnAfter) >= Comparison.Equal;
 
     return shouldError
       ? createErrorDeprecation(name, errorAfter, since, options.message)
@@ -281,10 +282,9 @@ export namespace Debug {
     deprecation: () => void,
     func: F
   ): F {
-    return function (this: unknown) {
+    return function (...args: Parameters<F>) {
       deprecation();
-      // @ts-ignore
-      return func.apply(this, arguments); // eslint-disable-line prefer-rest-params
+      return func(...args);
     } as F;
   }
 

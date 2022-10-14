@@ -1,28 +1,19 @@
 import json from "@rollup/plugin-json";
 import replace from "@rollup/plugin-replace";
+import typescript from "@rollup/plugin-typescript";
 import { Plugin, RollupOptions } from "rollup";
+import dts from "rollup-plugin-dts";
 import externals from "rollup-plugin-node-externals";
-import typescript from "rollup-plugin-typescript2";
+import tsconfig from "./tsconfig.json" assert { type: "json" };
 
 type apiOrCliType = "api" | "cli";
 
-function createPlugins(
-  dev: boolean,
-  apiOrCli: apiOrCliType,
-  generateTypes: boolean
-): Plugin[] {
+function createPlugins(dev: boolean, apiOrCli: apiOrCliType): Plugin[] {
   return [
     typescript({
       tsconfig: "./tsconfig.rollup.json",
-      useTsconfigDeclarationDir: true,
-      tsconfigOverride: {
+      compilerOptions: {
         removeComments: !dev,
-        ...(generateTypes
-          ? {
-              declaration: true,
-              declarationDir: "./types",
-            }
-          : {}),
       },
     }),
     replace({
@@ -44,7 +35,6 @@ interface CreateConfigOptions {
   cli?: boolean;
   dev: boolean;
   format: "cjs" | "esm";
-  generateTypes?: boolean;
 }
 
 function createConfig(
@@ -62,14 +52,13 @@ function createConfig({
   cli,
   dev,
   format,
-  generateTypes = false,
 }: CreateConfigOptions): RollupOptions | undefined {
   if (api && cli) {
     return undefined;
   } else if (api) {
     return {
       input: "./src/api/entrypoint.ts",
-      treeshake: !dev,
+      treeshake: "smallest",
       output: {
         sourcemap: true,
         format,
@@ -77,12 +66,12 @@ function createConfig({
           format === "cjs" ? "js" : "mjs"
         }`,
       },
-      plugins: createPlugins(dev, "api", generateTypes),
+      plugins: createPlugins(dev, "api"),
     };
   } else if (cli) {
     return {
       input: "./src/cli/entrypoint.ts",
-      treeshake: !dev,
+      treeshake: "smallest",
       output: {
         sourcemap: true,
         format,
@@ -90,21 +79,28 @@ function createConfig({
           format === "cjs" ? "js" : "mjs"
         }`,
       },
-      plugins: createPlugins(dev, "cli", generateTypes),
+      plugins: createPlugins(dev, "cli"),
     };
   }
 
   return undefined;
 }
 
-// TODO: fix the dts bundle generation
 const config: RollupOptions[] = [
   createConfig({ cli: true, dev: true, format: "cjs" }),
   createConfig({ cli: true, dev: false, format: "cjs" }),
   createConfig({ api: true, dev: true, format: "esm" }),
   createConfig({ api: true, dev: false, format: "esm" }),
   createConfig({ api: true, dev: true, format: "cjs" }),
-  createConfig({ api: true, dev: false, format: "cjs", generateTypes: true }),
+  createConfig({ api: true, dev: false, format: "cjs" }),
+  {
+    input: "./src/api/entrypoint.ts",
+    output: { file: "./dist/api.d.ts", format: "es" },
+    plugins: [
+      dts({ compilerOptions: { baseUrl: tsconfig.compilerOptions.baseUrl } }),
+      json({ preferConst: true }),
+    ],
+  },
 ];
 
 export default config;
