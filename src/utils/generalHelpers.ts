@@ -1,9 +1,22 @@
 export type AnyFunction = (...args: never[]) => void;
 
+export const newLineCharacter = "\n";
 export const emptyArray = [];
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export function noopFunction(): void {}
+
+export const enum Comparison {
+  LessThan = -1,
+  Equal = 0,
+  GreaterThan = 1,
+}
+
+export function compareValues(left: number, right: number): Comparison {
+  if (left < right) return Comparison.LessThan;
+  if (left > right) return Comparison.GreaterThan;
+  return Comparison.Equal;
+}
 
 // TODO: use plain Array.isArray once ts updates the Array.isArray defs to support narrowing readonly arrays
 export function checkIsReadonlyArray(

@@ -5,7 +5,7 @@ import {
   nameToIdMap,
 } from "./arguments";
 import { parseSyntaxTreeFromArgsString } from "./parser";
-import { programOptions } from "utils";
+import { Debug, programOptions } from "utils";
 
 interface ActionToTake {
   id: ArgumentKind;
@@ -39,6 +39,7 @@ export function takeActionFromCliArgs(argsString: string): void {
       (singleOrDoubleDash === "double" && argumentDash.doubleDash === false)
     ) {
       // The argument is unknown, so we should ignore it.
+      Debug.log.warn(`Unknown argument: ${argumentFlagName}`);
       continue;
     }
 
@@ -51,28 +52,43 @@ export function takeActionFromCliArgs(argsString: string): void {
           ? true
           : optionDetails.dataGetter(argumentValue.text);
 
-      if (value instanceof Error) continue;
+      if (value instanceof Error) {
+        Debug.log.warn(`Invalid value for argument: ${argumentFlagName}`);
+        continue;
+      }
 
-      if (
-        optionDetails.validator(value) &&
-        value !== optionDetails.defaultValue
-      )
-        addAction(optionDetails.id, value);
+      if (optionDetails.validator(value)) {
+        if (value !== optionDetails.defaultValue)
+          addAction(optionDetails.id, value);
+      } else {
+        Debug.log.warn(`Invalid value for argument: ${argumentFlagName}`);
+      }
     } else {
-      if (argumentValue === undefined) continue;
+      if (argumentValue === undefined) {
+        Debug.log.warn(`Missing value for argument: ${argumentFlagName}`);
+        continue;
+      }
 
       // The argument is known and has a value, so we should parse it and take the appropriate action.
       const value = optionDetails.dataGetter(argumentValue.text);
 
-      if (value instanceof Error) continue;
+      if (value instanceof Error) {
+        Debug.log.warn(`Invalid value for argument: ${argumentFlagName}`);
+        continue;
+      }
 
       if (
         (optionDetails.validator as (value: string | number) => boolean)(
           value
         ) &&
         value !== optionDetails.defaultValue
-      )
+      ) {
         addAction(optionDetails.id, value);
+      } else {
+        Debug.log.warn(
+          `Invalid value ${argumentValue.text} for argument: ${argumentFlagName}`
+        );
+      }
     }
   }
 

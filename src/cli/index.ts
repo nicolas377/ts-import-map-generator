@@ -4,13 +4,19 @@ import {
   requiredArgumentIds,
 } from "./options/arguments";
 import { initializeOptionsFromCliArgs } from "./options/index";
-import { Debug, programOptions } from "utils";
-import { generatorVersion, programVersion } from "version";
+import { Debug, LogLevel, newLineCharacter, programOptions } from "utils";
+import { programVersion } from "version";
 
 export function runCli(): void {
-  initializeOptionsFromCliArgs();
+  Debug.loggingHost = {
+    log(level: LogLevel, s: string) {
+      if (level <= LogLevel.Warning) {
+        console.log(s);
+      }
+    },
+  };
 
-  console.log(generatorVersion);
+  initializeOptionsFromCliArgs();
 
   if (programOptions.printHelpAndExit) {
     printVersion();
@@ -36,8 +42,12 @@ function printVersion(): void {
 }
 
 function printHelp(): void {
-  const newLine = "\n";
-  let helpText = `Usage: import-map-generator [options]${newLine}${newLine}Options:${newLine}`;
+  let helpText =
+    "Usage: import-map-generator [options]" +
+    newLineCharacter +
+    newLineCharacter +
+    "Options:" +
+    newLineCharacter;
 
   idToDataMap.forEach(
     ({ singleDashNames, doubleDashNames, description, required }) => {
@@ -48,7 +58,8 @@ function printHelp(): void {
       );
       const requiredString = required ? " (required)" : "";
 
-      helpText += `${namesText} - ${description}${requiredString}` + newLine;
+      helpText +=
+        `${namesText} - ${description}${requiredString}` + newLineCharacter;
     }
   );
 

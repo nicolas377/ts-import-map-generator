@@ -4,6 +4,7 @@ import {
   TextNodeWithFlags as ScannerTextNode,
   WhitespaceNode as ScannerWhitespaceNode,
 } from "./scanner";
+import { Debug } from "utils";
 
 const enum NodeKind {
   SyntaxTree,
@@ -137,6 +138,8 @@ export function parseSyntaxTreeFromArgsString(
       if (currentFlagNode && isCurrentlyCreatingArgument() && doubleDashFlag) {
         // If we are, we should create and bind a separator node.
         currentSeparatorNode = createParentLessSeparatorNode();
+      } else if (!currentFlagNode) {
+        Debug.log.warn("Unexpected whitespace or equals sign in argument.");
       }
     }
 
@@ -149,6 +152,8 @@ export function parseSyntaxTreeFromArgsString(
         moreThanTwoDashesFlag = currentScannedArg.text.length > 2;
 
         currentDashNode = createParentLessDashNode();
+      } else {
+        Debug.log.warn("Unexpected dashes in argument.");
       }
     }
 
@@ -176,6 +181,7 @@ export function parseSyntaxTreeFromArgsString(
 
       if (narrowedTextNodeOrFalse === false) {
         // Do nothing. We don't want to bind the node.
+        Debug.log.warn("Unknown text node.");
       } else if (narrowedTextNodeOrFalse.kind === NodeKind.Flag) {
         // If we can narrow the unknown text node to a flag node, we should create and bind a flag node.
         currentFlagNode = narrowedTextNodeOrFalse;
@@ -211,8 +217,9 @@ export function parseSyntaxTreeFromArgsString(
   function narrowUnknownTextNode(
     unknownTextNode: ExcludeParent<UnknownTextNode>
   ): ExcludeParent<FlagNode> | ExcludeParent<ValueNode> | false {
-    // If we're not currently creating an argument, then we can't narrow the unknown text node, so we return false.
+    // If we're not currently creating an argument, then we can't narrow the unknown text node, so we log a warning and return false.
     if (!isCurrentlyCreatingArgument()) {
+      Debug.log.warn("Unexpected text node between arguments.");
       return false;
     }
 
