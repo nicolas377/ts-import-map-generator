@@ -3,7 +3,7 @@ import {
   Comparison,
   noopFunction,
   objectHasProperty,
-} from "./generalHelpers";
+} from "./helpers";
 import { getGeneratorVersion, Semver } from "version";
 
 export interface LoggingHost {
@@ -11,19 +11,20 @@ export interface LoggingHost {
 }
 
 export const enum LogLevel {
-  Off,
-  Error,
-  Warning,
-  Info,
   Verbose,
+  Info,
+  Warning,
+  Error,
+  Off,
 }
 
 export namespace Debug {
   // logging
 
-  // eslint-disable-next-line prefer-const
+  /* eslint-disable prefer-const */
   export let currentLogLevel = LogLevel.Warning;
   export let loggingHost: LoggingHost | undefined;
+  /* eslint-enable prefer-const */
 
   function shouldLog(level: LogLevel): boolean {
     return currentLogLevel <= level;
@@ -55,7 +56,10 @@ export namespace Debug {
 
   // assertions
 
-  export function fail(message?: string, stackCrawlMark?: AnyFunction): never {
+  export function fail(
+    message?: string,
+    stackCrawlMark?: CallableFunction
+  ): never {
     // This is a great place to put a breakpoint; whenever we fail, we'll stop here.
     const e = new Error(
       message ? `Debug Failure. ${message}` : "Debug Failure."
@@ -69,7 +73,7 @@ export namespace Debug {
   export function assert(
     expression: unknown,
     message?: string,
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ): asserts expression {
     if (!expression) {
       fail(
@@ -84,7 +88,7 @@ export namespace Debug {
     b: T,
     msg?: string,
     msg2?: string,
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ) {
     if (a !== b) {
       const message = msg ? (msg2 ? `${msg} ${msg2}` : msg) : "";
@@ -96,7 +100,7 @@ export namespace Debug {
     a: number,
     b: number,
     msg?: string,
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ): void {
     if (a >= b) {
       fail(
@@ -109,7 +113,7 @@ export namespace Debug {
   export function assertLessThanOrEqual(
     a: number,
     b: number,
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ): void {
     if (a > b) {
       fail(`Expected ${a} <= ${b}`, stackCrawlMark || assertLessThanOrEqual);
@@ -119,7 +123,7 @@ export namespace Debug {
   export function assertGreaterThanOrEqual(
     a: number,
     b: number,
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ): void {
     if (a < b) {
       fail(`Expected ${a} >= ${b}`, stackCrawlMark || assertGreaterThanOrEqual);
@@ -129,7 +133,7 @@ export namespace Debug {
   export function assertIsDefined<T>(
     value: T,
     message?: string,
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ): asserts value is NonNullable<T> {
     if (value === undefined || value === null) {
       fail(message, stackCrawlMark || assertIsDefined);
@@ -139,7 +143,7 @@ export namespace Debug {
   export function checkDefined<T>(
     value: T | null | undefined,
     message?: string,
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ): T {
     assertIsDefined(value, message, stackCrawlMark || checkDefined);
     return value;
@@ -148,7 +152,7 @@ export namespace Debug {
   export function assertEachIsDefined<T>(
     value: readonly T[],
     message?: string,
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ): asserts value is readonly NonNullable<T>[] {
     for (const v of value) {
       assertIsDefined(v, message, stackCrawlMark || assertEachIsDefined);
@@ -158,7 +162,7 @@ export namespace Debug {
   export function assertNever(
     value: never,
     message = "Expected function to never be called",
-    stackCrawlMark?: AnyFunction
+    stackCrawlMark?: CallableFunction
   ): never {
     return fail(message, stackCrawlMark || assertNever);
   }

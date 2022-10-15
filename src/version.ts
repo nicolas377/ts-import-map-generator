@@ -1,11 +1,11 @@
 import { version as programVersion } from "../package.json";
+import { Debug } from "utils/debug";
 import {
   checkIsReadonlyArray,
   compareValues,
   Comparison,
-  Debug,
   emptyArray,
-} from "utils";
+} from "utils/helpers";
 
 // Implements the SemVer 2.0 spec
 // A lot of this code is borrowed from typescript's semver.ts, but repurposed for our purposes

@@ -1,4 +1,4 @@
-import { AnyFunction } from "utils";
+import { AnyFunction } from "utils/helpers";
 
 // TODO
 function wrapForApi<T extends AnyFunction>(func: T): T {

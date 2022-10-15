@@ -4,13 +4,15 @@ import {
   requiredArgumentIds,
 } from "./options/arguments";
 import { initializeOptionsFromCliArgs } from "./options/index";
-import { Debug, LogLevel, newLineCharacter, programOptions } from "utils";
+import { Debug, LogLevel } from "utils/debug";
+import { newLineCharacter } from "utils/helpers";
+import { programOptions } from "utils/options";
 import { programVersion } from "version";
 
 export function runCli(): void {
   Debug.loggingHost = {
     log(level: LogLevel, s: string) {
-      if (level <= LogLevel.Warning) {
+      if (level >= LogLevel.Warning) {
         console.log(s);
       }
     },

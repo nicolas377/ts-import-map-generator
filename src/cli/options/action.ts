@@ -5,7 +5,8 @@ import {
   nameToIdMap,
 } from "./arguments";
 import { parseSyntaxTreeFromArgsString } from "./parser";
-import { Debug, programOptions } from "utils";
+import { Debug } from "utils/debug";
+import { programOptions } from "utils/options";
 
 interface ActionToTake {
   id: ArgumentKind;

@@ -1,3 +1,15 @@
+type UnReadonlyAble = string | number | boolean | Function | null | undefined;
+type DeepReadonlyObject<T> = {
+  readonly [P in keyof T]: DeepReadonly<T[P]>;
+};
+export type DeepReadonly<T> = T extends UnReadonlyAble
+  ? T
+  : T extends Array<infer U>
+  ? ReadonlyArray<DeepReadonly<U>>
+  : T extends object
+  ? DeepReadonlyObject<T>
+  : never;
+
 export type AnyFunction = (...args: never[]) => void;
 
 export const newLineCharacter = "\n";

@@ -1,5 +1,5 @@
 import { Debug } from "./debug";
-import { keysOfObject } from "./generalHelpers";
+import { keysOfObject } from "./helpers";
 import { ArgumentKind, ArgumentType, idToDataMap } from "cli/options/arguments";
 
 const argumentKindToOptionNameMap: Readonly<

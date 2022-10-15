@@ -4,7 +4,10 @@ import {
   TextNodeWithFlags as ScannerTextNode,
   WhitespaceNode as ScannerWhitespaceNode,
 } from "./scanner";
-import { Debug } from "utils";
+import { Debug } from "utils/debug";
+
+// TODO: parents aren't used, they should be removed
+// neither are ids, but they might be helpful for debugging
 
 const enum NodeKind {
   SyntaxTree,
