@@ -110,6 +110,20 @@ export namespace Debug {
     }
   }
 
+  export function assertGreaterThan(
+    a: number,
+    b: number,
+    msg?: string,
+    stackCrawlMark?: CallableFunction
+  ): void {
+    if (a <= b) {
+      fail(
+        `Expected ${a} > ${b}. ${msg || ""}`,
+        stackCrawlMark || assertGreaterThan
+      );
+    }
+  }
+
   export function assertLessThanOrEqual(
     a: number,
     b: number,
@@ -169,7 +183,7 @@ export namespace Debug {
 
   // deprecations
 
-  interface DeprecationOptions {
+  export interface DeprecationOptions {
     message?: string;
     error?: boolean;
     since?: Semver | string;
@@ -206,7 +220,7 @@ export namespace Debug {
         : errorAfter
         ? ` and will no longer be usable after v${errorAfter}`
         : ".") +
-      (message ?? "");
+      (message ? ` ${message}` : "");
 
     return deprecationMessage;
   }
@@ -263,7 +277,7 @@ export namespace Debug {
     const shouldError =
       options.error ||
       (errorAfter &&
-        getGeneratorVersion().compareTo(errorAfter) === Comparison.GreaterThan);
+        getGeneratorVersion().compareTo(errorAfter) >= Comparison.GreaterThan);
     const shouldWarn =
       !warnAfter ||
       getGeneratorVersion().compareTo(warnAfter) >= Comparison.Equal;

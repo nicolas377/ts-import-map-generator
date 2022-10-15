@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Debug deprecations errors after given version: error snapshot 1`] = `"DeprecationError: 'deprecatedFunction' is deprecated and can no longer be used."`;
+
+exports[`Debug deprecations warn + error combo (post-error): error snapshot 1`] = `"DeprecationError: 'deprecatedFunction' has been deprecated since v2.0.0 and can no longer be used."`;
+
+exports[`Debug deprecations warn + error combo (post-warn): warning snapshot 1`] = `"DeprecationWarning: 'deprecatedFunction' has been deprecated since v2.0.0 and will no longer be usable after v3.0.0"`;
+
+exports[`Debug deprecations warning deprecation logs a warning 1`] = `"DeprecationWarning: 'someDeprecatedFunction' has been deprecated since v2.0.0. function is deprecated"`;

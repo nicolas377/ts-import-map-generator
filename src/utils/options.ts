@@ -2,7 +2,8 @@ import { Debug } from "./debug";
 import { keysOfObject } from "./helpers";
 import { ArgumentKind, ArgumentType, idToDataMap } from "cli/options/arguments";
 
-const argumentKindToOptionNameMap: Readonly<
+// should only be used here and testing
+export const argumentKindToOptionNameMap: Readonly<
   Record<ArgumentKind, keyof IOptions>
 > = {
   [ArgumentKind.Help]: "printHelpAndExit",

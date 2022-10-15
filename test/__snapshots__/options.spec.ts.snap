@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`options default options should match snapshot 1`] = `
+OptionsClass {
+  "allOptions": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "entrypointLocation": Symbol(missing),
+  "graphMaxDepth": 1000,
+  "ignoreFiles": "",
+  "options": {
+    "0": false,
+    "1": false,
+    "2": Symbol(missing),
+    "3": 1000,
+    "4": "",
+  },
+  "printHelpAndExit": false,
+  "printVersionAndExit": false,
+}
+`;
