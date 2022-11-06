@@ -4,6 +4,7 @@ import {
   requiredArgumentIds,
 } from "./options/arguments";
 import { initializeOptionsFromCliArgs } from "./options/index";
+import { generateImportMap } from "api";
 import { Debug, LogLevel } from "utils/debug";
 import { newLineCharacter } from "utils/helpers";
 import { programOptions } from "utils/options";
@@ -36,6 +37,14 @@ export function runCli(): void {
         }`
       );
     }
+
+    cliWorker();
+  }
+
+  function cliWorker(): void {
+    const importMap = generateImportMap(programOptions.entrypointLocation);
+
+    console.log(importMap);
   }
 }
 

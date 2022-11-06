@@ -10,7 +10,7 @@ export type DeepReadonly<T> = T extends UnReadonlyAble
   ? DeepReadonlyObject<T>
   : never;
 
-export type AnyFunction = (...args: never[]) => void;
+export type AnyFunction = (...args: any[]) => any;
 
 export const newLineCharacter = "\n";
 export const emptyArray = [];

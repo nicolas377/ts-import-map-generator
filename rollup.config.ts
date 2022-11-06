@@ -10,12 +10,6 @@ type apiOrCliType = "api" | "cli";
 
 function createPlugins(dev: boolean, apiOrCli: apiOrCliType): Plugin[] {
   return [
-    typescript({
-      tsconfig: "./tsconfig.rollup.json",
-      compilerOptions: {
-        removeComments: !dev,
-      },
-    }),
     replace({
       preventAssignment: true,
       values: {
@@ -27,6 +21,12 @@ function createPlugins(dev: boolean, apiOrCli: apiOrCliType): Plugin[] {
     }),
     json({ preferConst: true }),
     externals(),
+    typescript({
+      tsconfig: "./tsconfig.rollup.json",
+      compilerOptions: {
+        removeComments: !dev,
+      },
+    }),
   ];
 }
 

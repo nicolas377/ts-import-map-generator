@@ -13,9 +13,7 @@ export const argumentKindToOptionNameMap: Readonly<
   [ArgumentKind.IgnoreFiles]: "ignoreFiles",
 };
 
-interface IOptions {
-  getOption(kind: ArgumentKind): ArgumentType;
-  setOption(kind: ArgumentKind, value: ArgumentType): void;
+export interface IOptionsData {
   printHelpAndExit: boolean;
   printVersionAndExit: boolean;
   entrypointLocation: string;
@@ -23,34 +21,41 @@ interface IOptions {
   ignoreFiles: string;
 }
 
-class OptionsClass {
-  private allOptions = keysOfObject(argumentKindToOptionNameMap);
+interface IOptions extends IOptionsData {
+  getOption(kind: ArgumentKind): ArgumentType;
+  setOption(kind: ArgumentKind, value: ArgumentType): void;
+}
 
-  private options: Record<ArgumentKind, ArgumentType>;
+export const programOptions = class StaticOptionsClass {
+  private static allOptions = keysOfObject(argumentKindToOptionNameMap);
 
-  public getOption(kind: ArgumentKind): ArgumentType {
-    return this.options[kind];
+  private static options: Record<ArgumentKind, ArgumentType>;
+
+  public static getOption(kind: ArgumentKind): ArgumentType {
+    return StaticOptionsClass.options[kind];
   }
 
-  public setOption(kind: ArgumentKind, value: ArgumentType): void {
-    this.options[kind] = value;
+  public static setOption(kind: ArgumentKind, value: ArgumentType): void {
+    StaticOptionsClass.options[kind] = value;
   }
 
-  constructor() {
-    // kind should be one of all of the options, so this validates that at compile-time.
-    this.options = this.allOptions.reduce((acc, kind: ArgumentKind) => {
-      const { defaultValue } = idToDataMap.get(+kind) ?? {};
+  static {
+    StaticOptionsClass.options = StaticOptionsClass.allOptions.reduce(
+      (acc, kind: ArgumentKind) => {
+        const { defaultValue } = idToDataMap.get(+kind) ?? {};
 
-      Debug.assertIsDefined(
-        defaultValue,
-        `No default value for argument kind ${kind}`
-      );
+        Debug.assertIsDefined(
+          defaultValue,
+          `No default value for argument kind ${kind}`
+        );
 
-      acc[kind] = defaultValue;
-      return acc;
-    }, {} as Record<ArgumentKind, ArgumentType>);
+        acc[kind] = defaultValue;
+        return acc;
+      },
+      {} as Record<ArgumentKind, ArgumentType>
+    );
 
-    for (const kind of this.allOptions) {
+    for (const kind of StaticOptionsClass.allOptions) {
       const optionData = idToDataMap.get(+kind);
 
       Debug.assertIsDefined(
@@ -58,18 +63,20 @@ class OptionsClass {
         `No option data for argument kind ${kind}`
       );
 
-      Object.defineProperty(this, argumentKindToOptionNameMap[kind], {
-        configurable: false,
-        enumerable: true,
-        get: () => this.options[kind],
-        set: (value: ArgumentType) => {
-          // TODO: when TS supports merging function types, this assertion can be removed.
-          (optionData.validator as (value: ArgumentType) => boolean)(value);
-          this.options[kind] = value;
-        },
-      });
+      Object.defineProperty(
+        StaticOptionsClass,
+        argumentKindToOptionNameMap[kind],
+        {
+          configurable: false,
+          enumerable: true,
+          get: () => StaticOptionsClass.options[kind],
+          set: (value: ArgumentType) => {
+            // TODO: when TS supports merging function types, this assertion can be removed.
+            (optionData.validator as (value: ArgumentType) => boolean)(value);
+            StaticOptionsClass.options[kind] = value;
+          },
+        }
+      );
     }
   }
-}
-
-export const programOptions = new OptionsClass() as unknown as IOptions;
+} as unknown as IOptions;

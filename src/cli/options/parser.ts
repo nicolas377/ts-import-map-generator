@@ -6,8 +6,7 @@ import {
 } from "./scanner";
 import { Debug } from "utils/debug";
 
-// TODO: parents aren't used, they should be removed
-// neither are ids, but they might be helpful for debugging
+// TODO: parents and ids aren't used, they should be removed
 
 const enum NodeKind {
   SyntaxTree,
@@ -179,7 +178,7 @@ export function parseSyntaxTreeFromArgsString(
         currentScannedArg.text
       );
 
-      // Narrow it to a FlagNode or a ValueNode (offloaded to another function), then bind it.
+      // Narrow it to a FlagNode or a ValueNode, then bind it.
       const narrowedTextNodeOrFalse = narrowUnknownTextNode(unknownTextNode);
 
       if (narrowedTextNodeOrFalse === false) {
