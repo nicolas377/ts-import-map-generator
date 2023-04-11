@@ -1,1 +1,0 @@
-export { programVersion } from "version";
