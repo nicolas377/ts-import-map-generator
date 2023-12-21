@@ -1,15 +1,13 @@
 import { Debug } from "./debug";
 import { ArgumentKind, ArgumentType, idToDataMap } from "cli/options/arguments";
 
-const argumentKindToOptionNameMap: Readonly<
-  Record<ArgumentKind, keyof IOptions>
-> = {
+const argumentKindToOptionNameMap = {
   [ArgumentKind.Help]: "printHelpAndExit",
   [ArgumentKind.Version]: "printVersionAndExit",
   [ArgumentKind.Entrypoint]: "entrypointLocation",
   [ArgumentKind.GraphMaxDepth]: "graphMaxDepth",
   [ArgumentKind.IgnoreFiles]: "ignoreFiles",
-};
+} as const satisfies Record<ArgumentKind, keyof IOptions>;
 
 export interface IOptionsData {
   printHelpAndExit: boolean;
@@ -24,14 +22,13 @@ interface IOptions extends IOptionsData {
   setOption(kind: ArgumentKind, value: ArgumentType): void;
 }
 
-function typeUnsafeObjectKeys<T extends PropertyKey>(
-  obj: Record<T, unknown>
-): T[] {
-  return Object.keys(obj) as T[];
-}
-
 export const programOptions = class StaticOptionsClass {
-  private static allOptions = typeUnsafeObjectKeys(argumentKindToOptionNameMap);
+  // Keep in mind that at runtime, these are strings, not numbers.
+  // I've kept the type of the array as that of numbers to make it easier to read.
+  // TODO: represent the true runtime value at compile-time.
+  private static allOptions = Object.keys(
+    argumentKindToOptionNameMap,
+  ) as unknown as (keyof typeof argumentKindToOptionNameMap)[];
 
   private static options: Record<ArgumentKind, ArgumentType>;
 
@@ -50,13 +47,13 @@ export const programOptions = class StaticOptionsClass {
 
         Debug.assertIsDefined(
           defaultValue,
-          `No default value for argument kind ${kind}`
+          `No default value for argument kind ${kind}`,
         );
 
         acc[kind] = defaultValue;
         return acc;
       },
-      {} as Record<ArgumentKind, ArgumentType>
+      {} as Record<ArgumentKind, ArgumentType>,
     );
 
     for (const kind of StaticOptionsClass.allOptions) {
@@ -64,7 +61,7 @@ export const programOptions = class StaticOptionsClass {
 
       Debug.assertIsDefined(
         optionData,
-        `No option data for argument kind ${kind}`
+        `No option data for argument kind ${kind}`,
       );
 
       Object.defineProperty(
@@ -79,7 +76,7 @@ export const programOptions = class StaticOptionsClass {
             (optionData.validator as (value: ArgumentType) => boolean)(value);
             StaticOptionsClass.options[kind] = value;
           },
-        }
+        },
       );
     }
   }

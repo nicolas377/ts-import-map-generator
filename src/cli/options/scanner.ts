@@ -43,7 +43,7 @@ const whitespaceRegex = /\s+/;
 
 // Scanner is a generator that yields raw text and whitespace nodes from the input.
 export function* scanArgs(
-  args: string
+  args: string,
 ): Generator<WhitespaceNode | TextNodeWithFlags> {
   // The scanner is built around matching phrases and returning them as nodes.
   // When the scanner encounters a phrase, it yields a node, clears the current text, and then continues scanning from the end of the phrase.
@@ -147,7 +147,7 @@ export function* scanArgs(
       }
       const nextCharIsWhitespace = regexMatchesFullString(
         nextChar,
-        whitespaceRegex
+        whitespaceRegex,
       );
 
       if (node.kind === ScannerNodeKind.Whitespace) {
@@ -164,13 +164,13 @@ export function* scanArgs(
         return nextChar === "=";
       } else {
         // This is the case where we're in a non-flagged text node, and the next character isn't whitespace.
-        // We can extend the node if the next character is a letter, number, dash, or underscore.
-        return regexMatchesFullString(nextChar, /[a-zA-Z0-9_-]/);
+        // We can extend the node if the next character is a letter, number, dash, underscore, dot, or slash (either direction).
+        return regexMatchesFullString(nextChar, /[a-zA-Z0-9_\-\.\/\\]/);
       }
     }
 
     function addFlagsToNode(
-      attemptedNode: WhitespaceNode | TextNode
+      attemptedNode: WhitespaceNode | TextNode,
     ): WhitespaceNode | TextNodeWithFlags {
       if (attemptedNode.kind === ScannerNodeKind.Whitespace) {
         // Whitespace nodes don't have flags.

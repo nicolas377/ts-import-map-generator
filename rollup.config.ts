@@ -14,7 +14,7 @@ function createPlugins(dev: boolean, apiOrCli: apiOrCliType): Plugin[] {
       preventAssignment: true,
       values: {
         "process.env.IMG_PROJECT_ENV": JSON.stringify(
-          dev ? "development" : "production"
+          dev ? "development" : "production",
         ),
         "process.env.IMG_PROJECT_RUN_TYPE": JSON.stringify(apiOrCli),
       },
@@ -37,13 +37,13 @@ interface CreateConfigOptions {
 }
 
 function createConfig(
-  options: CreateConfigOptions & { cli: true; api: true }
+  options: CreateConfigOptions & { cli: true; api: true },
 ): undefined;
 function createConfig(
-  options: CreateConfigOptions & { cli: true }
+  options: CreateConfigOptions & { cli: true },
 ): RollupOptions;
 function createConfig(
-  options: CreateConfigOptions & { api: true }
+  options: CreateConfigOptions & { api: true },
 ): RollupOptions;
 function createConfig(options: CreateConfigOptions): undefined;
 function createConfig({
@@ -59,6 +59,7 @@ function createConfig({
       input: "./src/api/entrypoint.ts",
       treeshake: "smallest",
       output: {
+        sourcemap: true,
         format,
         file: `./dist/api.${dev ? "dev" : "prod"}.${
           format === "cjs" ? "js" : "mjs"
@@ -71,6 +72,7 @@ function createConfig({
       input: "./src/cli/entrypoint.ts",
       treeshake: "smallest",
       output: {
+        sourcemap: true,
         format,
         file: `./dist/cli.${dev ? "dev" : "prod"}.${
           format === "cjs" ? "js" : "mjs"

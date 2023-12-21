@@ -6,10 +6,10 @@ export type ArgumentType = string | boolean | number;
 type StringFromArgumentType<T extends ArgumentType> = T extends string
   ? "string"
   : T extends boolean
-  ? "boolean"
-  : T extends number
-  ? "number"
-  : never;
+    ? "boolean"
+    : T extends number
+      ? "number"
+      : never;
 
 interface BaseArgumentData<T extends ArgumentType> {
   id: ArgumentKind;

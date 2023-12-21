@@ -88,7 +88,7 @@ interface SyntaxTreeApi {
 }
 
 export function parseSyntaxTreeFromArgsString(
-  argsString: string
+  argsString: string,
 ): SyntaxTreeApi {
   // The parser is made to construct a syntax tree.
   // The syntax tree starts with a root node, and then has a series of argument nodes.
@@ -103,7 +103,7 @@ export function parseSyntaxTreeFromArgsString(
   const idNodeMap = new Map<NodeId, ParentLessNode>();
   const syntaxTree: SyntaxTree = Object.assign(
     createParentLessNode(NodeKind.SyntaxTree),
-    { arguments: [] }
+    { arguments: [] },
   );
   applyFlagsToNode(syntaxTree, NodeFlags.IsTopLevelSyntaxTree);
   const scannedArgs = [...scanArgs(argsString)];
@@ -175,7 +175,7 @@ export function parseSyntaxTreeFromArgsString(
     // If we encounter an unflagged text node, create a UnknownTextNode.
     else {
       const unknownTextNode = createParentLessUnknownTextNode(
-        currentScannedArg.text
+        currentScannedArg.text,
       );
 
       // Narrow it to a FlagNode or a ValueNode, then bind it.
@@ -217,7 +217,7 @@ export function parseSyntaxTreeFromArgsString(
 
   // Attempts to narrow the unknown text node to a flag node or a value node depending on the context.
   function narrowUnknownTextNode(
-    unknownTextNode: ExcludeParent<UnknownTextNode>
+    unknownTextNode: ExcludeParent<UnknownTextNode>,
   ): ExcludeParent<FlagNode> | ExcludeParent<ValueNode> | false {
     // If we're not currently creating an argument, then we can't narrow the unknown text node, so we log a warning and return false.
     if (!isCurrentlyCreatingArgument()) {
@@ -305,7 +305,7 @@ export function parseSyntaxTreeFromArgsString(
       currentDashNode!,
       currentFlagNode!,
       currentSeparatorNode,
-      currentValueNode
+      currentValueNode,
     );
     syntaxTree.arguments.push(argumentNode);
 
@@ -316,7 +316,7 @@ export function parseSyntaxTreeFromArgsString(
     dash: ExcludeParent<DashNode>,
     flag: ExcludeParent<FlagNode>,
     separator?: ExcludeParent<SeparatorNode>,
-    value?: ExcludeParent<ValueNode>
+    value?: ExcludeParent<ValueNode>,
   ): ArgumentNode {
     const argumentNode: ArgumentNode = Object.assign(
       createParentLessNode(NodeKind.Argument),
@@ -324,7 +324,7 @@ export function parseSyntaxTreeFromArgsString(
         parent: syntaxTree,
         dash: dash as DashNode,
         flag: flag as FlagNode,
-      }
+      },
     );
 
     Object.assign(dash, { parent: argumentNode });
@@ -355,7 +355,7 @@ export function parseSyntaxTreeFromArgsString(
   }
 
   function createParentLessUnknownTextNode(
-    text: string
+    text: string,
   ): ExcludeParent<UnknownTextNode> {
     return createTextNode(NodeKind.UnknownText, text);
   }
@@ -426,13 +426,13 @@ export function parseSyntaxTreeFromArgsString(
   }
 
   function scannerNodeIsText(
-    node: ScannerTextNode | ScannerWhitespaceNode | undefined
+    node: ScannerTextNode | ScannerWhitespaceNode | undefined,
   ): node is ScannerTextNode {
     return node?.kind === ScannerNodeKind.Text;
   }
 
   function scannerNodeIsSeparator(
-    node: ScannerTextNode | ScannerWhitespaceNode | undefined
+    node: ScannerTextNode | ScannerWhitespaceNode | undefined,
   ): node is ScannerWhitespaceNode | (ScannerTextNode & { equalsFlag: true }) {
     return (
       (node?.kind === ScannerNodeKind.Whitespace || node?.equalsFlag) ?? false
@@ -440,7 +440,7 @@ export function parseSyntaxTreeFromArgsString(
   }
 
   function peekForwardNArgs(
-    n: number
+    n: number,
   ): ScannerTextNode | ScannerWhitespaceNode | undefined {
     return scannedArgs[currentScannedArgIndex + n];
   }
@@ -451,7 +451,7 @@ export function parseSyntaxTreeFromArgsString(
 
   function finalizeSyntaxTreeAndCreateApi(
     syntaxTree: SyntaxTree,
-    idNodeMap: Map<NodeId, ParentLessNode>
+    idNodeMap: Map<NodeId, ParentLessNode>,
   ): SyntaxTreeApi {
     pruneIdNodeMap();
 

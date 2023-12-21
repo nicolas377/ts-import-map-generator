@@ -45,7 +45,7 @@ export namespace Debug {
   export function fail(message?: string): never {
     // This is a great place to put a breakpoint; whenever we fail, we'll stop here.
     const e = new Error(
-      message ? `Debug Failure. ${message}` : "Debug Failure."
+      message ? `Debug Failure. ${message}` : "Debug Failure.",
     );
 
     throw e;
@@ -53,7 +53,7 @@ export namespace Debug {
 
   export function assert(
     expression: unknown,
-    message?: string
+    message?: string,
   ): asserts expression {
     if (!expression) {
       fail(message ? `False expression: ${message}` : "False expression.");
@@ -93,7 +93,7 @@ export namespace Debug {
 
   export function assertIsDefined<T>(
     value: T,
-    message?: string
+    message?: string,
   ): asserts value is NonNullable<T> {
     // intentional use of == to allow for undefined or null
     // eslint-disable-next-line eqeqeq
@@ -104,7 +104,7 @@ export namespace Debug {
 
   export function checkDefined<T>(
     value: T | null | undefined,
-    message?: string
+    message?: string,
   ): T {
     assertIsDefined(value, message);
     return value;
@@ -112,7 +112,7 @@ export namespace Debug {
 
   export function assertEachIsDefined<T>(
     value: readonly T[],
-    message?: string
+    message?: string,
   ): asserts value is readonly NonNullable<T>[] {
     for (const v of value) {
       assertIsDefined(v, message);
@@ -121,7 +121,7 @@ export namespace Debug {
 
   export function assertNever(
     value: never,
-    message = "Expected function to never be called"
+    message = "Expected function to never be called",
   ): never {
     return fail(message);
   }

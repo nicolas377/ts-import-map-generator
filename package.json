@@ -2,30 +2,43 @@
   "name": "ts-import-map-generator",
   "version": "0.0.0",
   "description": "Creates import maps from an entry point file.",
-  "main": "index.js",
+  "bin": "cli.js",
+  "exports": {
+    ".": {
+      "import": "./dist/api.prod.mjs",
+      "require": "./dist/api.prod.js",
+      "types": "./dist/api.d.ts"
+    }
+  },
+  "files": [
+    "dist/*.d.ts",
+    "dist/*.prod.js",
+    "dist/*.prod.mjs"
+  ],
   "scripts": {
     "build": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "check-format": "prettier --ignore-path=.gitignore --check .",
-    "lint": "eslint --ignore-path=.gitignore .",
+    "lint": "tsc --noEmit && eslint --ignore-path=.gitignore .",
     "prettier": "prettier --ignore-path=.gitignore --write ."
   },
   "author": "Nicolas Rodriguez",
   "license": "ISC",
   "devDependencies": {
-    "@rollup/plugin-json": "~6.0.0",
-    "@rollup/plugin-replace": "~5.0.2",
-    "@rollup/plugin-typescript": "~11.1.0",
-    "@types/node": "~18.15.11",
-    "@typescript-eslint/eslint-plugin": "~5.58.0",
-    "eslint": "~8.38.0",
-    "eslint-config-prettier": "~8.8.0",
-    "eslint-import-resolver-typescript": "~3.5.5",
-    "eslint-plugin-import": "~2.27.5",
-    "prettier": "~2.8.7",
-    "rollup": "~3.20.2",
-    "rollup-plugin-dts": "~5.3.0",
-    "rollup-plugin-node-externals": "~5.1.2",
+    "@rollup/plugin-json": "~6.1.0",
+    "@rollup/plugin-replace": "~5.0.5",
+    "@rollup/plugin-typescript": "~11.1.5",
+    "@types/node": "~20.10.5",
+    "@typescript-eslint/eslint-plugin": "~6.15.0",
+    "eslint": "~8.56.0",
+    "eslint-config-prettier": "~9.1.0",
+    "eslint-import-resolver-typescript": "~3.6.1",
+    "eslint-plugin-import": "~2.29.1",
+    "prettier": "~3.1.1",
+    "rollup": "~4.9.1",
+    "rollup-plugin-dts": "~6.1.0",
+    "rollup-plugin-node-externals": "~6.1.2",
     "tsconfig-paths": "~4.2.0",
-    "typescript": "~5.0.4"
+    "tslib": "~2.6.2",
+    "typescript": "~5.3.3"
   }
 }

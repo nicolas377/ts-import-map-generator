@@ -80,14 +80,14 @@ export function takeActionFromCliArgs(argsString: string): void {
 
       if (
         (optionDetails.validator as (value: string | number) => boolean)(
-          value
+          value,
         ) &&
         value !== optionDetails.defaultValue
       ) {
         addAction(optionDetails.id, value);
       } else {
         Debug.log.warn(
-          `Invalid value ${argumentValue.text} for argument: ${argumentFlagName}`
+          `Invalid value ${argumentValue.text} for argument: ${argumentFlagName}`,
         );
       }
     }

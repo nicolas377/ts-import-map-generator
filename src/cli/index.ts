@@ -5,10 +5,20 @@ import {
   missingArgumentSymbol,
   requiredArgumentIds,
 } from "./options/arguments";
-import { Debug } from "utils/debug";
+import { buildImportTree } from "api";
+import { Debug, LogLevel } from "utils/debug";
 import { programOptions } from "utils/options";
 
+// This could be better named as runCliVerify, because this function is a setup function.
 export function runCli(): void {
+  Debug.loggingHost = {
+    log(level: LogLevel, s: string) {
+      if (level >= LogLevel.Warning) {
+        console.log(s);
+      }
+    },
+  };
+
   initializeOptionsFromCliArgs();
 
   if (programOptions.printHelpAndExit) {
@@ -24,11 +34,11 @@ export function runCli(): void {
     Debug.assert(
       (programOptions.getOption(argumentId) as unknown as symbol) !==
         missingArgumentSymbol,
-      `Missing required argument: ${idToDataMap.get(argumentId)!.name}`
+      `Missing required argument: ${idToDataMap.get(argumentId)!.name}`,
     );
   }
 
-  console.log(programOptions);
+  runCliWorker();
 
   function printVersion(): void {
     console.log(`Import Map Generator v${version}`);
@@ -48,15 +58,20 @@ export function runCli(): void {
         const singleDashNamesText = singleDashNames.map((name) => `-${name}`);
         const doubleDashNamesText = doubleDashNames.map((name) => `--${name}`);
         const namesText = [...singleDashNamesText, ...doubleDashNamesText].join(
-          ", "
+          ", ",
         );
         const requiredString = required ? " (required)" : "";
 
         helpText +=
           `${namesText} - ${description}${requiredString}` + newLineCharacter;
-      }
+      },
     );
 
     console.log(helpText);
   }
+}
+
+// This is the real worker function. When this is called, all options have been initialized, verified, and we're ready to start work.
+function runCliWorker(): void {
+  const tree = buildImportTree(programOptions.entrypointLocation);
 }
