@@ -66,9 +66,9 @@ export function* scanArgs(
   let currentCharIndex = -1;
   let currentText = "";
 
+  // When this is true, we're out of characters to scan after this one, and should yield a node now and exit.
   let isOutOfChars = false;
 
-  // When this is true, we're out of characters to scan after this one, and should yield a node now and exit.
   let dashFlag: boolean = flagDefaults.dashFlag;
   let equalsFlag: boolean = flagDefaults.equalsFlag;
 

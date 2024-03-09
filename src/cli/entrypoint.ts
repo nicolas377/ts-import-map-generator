@@ -1,3 +1,3 @@
-import { runCli } from "cli";
+import { verifyAndRunCli } from "cli";
 
-runCli();
+verifyAndRunCli();

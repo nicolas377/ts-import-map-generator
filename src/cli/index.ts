@@ -9,8 +9,7 @@ import { buildImportTree } from "api";
 import { Debug, LogLevel } from "utils/debug";
 import { programOptions } from "utils/options";
 
-// This could be better named as runCliVerify, because this function is a setup function.
-export function runCli(): void {
+export function verifyAndRunCli(): void {
   Debug.loggingHost = {
     log(level: LogLevel, s: string) {
       if (level >= LogLevel.Warning) {
@@ -32,6 +31,8 @@ export function runCli(): void {
 
   for (const argumentId of requiredArgumentIds) {
     Debug.assert(
+      // casting because if this does happen, then getOption will return the symbol
+      // in all other cases, this won't trigger and all is well
       (programOptions.getOption(argumentId) as unknown as symbol) !==
         missingArgumentSymbol,
       `Missing required argument: ${idToDataMap.get(argumentId)!.name}`,

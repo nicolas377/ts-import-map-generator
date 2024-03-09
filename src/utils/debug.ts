@@ -23,21 +23,13 @@ export namespace Debug {
   }
 
   export namespace log {
-    export function error(s: string) {
-      logMessage(LogLevel.Error, s);
-    }
+    export const error = logMessage.bind(Object.create(null), LogLevel.Error);
 
-    export function warn(s: string): void {
-      logMessage(LogLevel.Warning, s);
-    }
+    export const warn = logMessage.bind(Object.create(null), LogLevel.Warning);
 
-    export function info(s: string): void {
-      logMessage(LogLevel.Info, s);
-    }
+    export const info = logMessage.bind(Object.create(null), LogLevel.Info);
 
-    export function trace(s: string): void {
-      logMessage(LogLevel.Verbose, s);
-    }
+    export const trace = logMessage.bind(Object.create(null), LogLevel.Verbose);
   }
 
   // assertions
